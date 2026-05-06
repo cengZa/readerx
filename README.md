@@ -1,5 +1,7 @@
 # ReaderX
 
+Chinese version: [README.zh-CN.md](README.zh-CN.md)
+
 ReaderX is a local-first terminal reader for long-form text. It imports TXT and EPUB files into a local SQLite library, provides a terminal reading UI, and keeps reading progress, search data, bookmarks, and notes on your machine.
 
 ReaderX is not a downloader or scraper. It is designed for local files you own or are allowed to read.
