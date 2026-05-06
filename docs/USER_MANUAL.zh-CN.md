@@ -42,10 +42,12 @@ ReaderX 会保存每本书最后阅读到的章节和位置。
 ~/.readerx/reader.db
 ```
 
+这是日常使用的默认数据库。正常使用时不需要传 `--db`，ReaderX 会自动读写这里。
+
 使用全局参数 `--db` 可以指定其他数据库：
 
 ```bash
-./readerx --db ./reader.db list
+readerx --db ./reader.db list
 ```
 
 注意：`--db` 必须放在子命令前面。
@@ -53,43 +55,25 @@ ReaderX 会保存每本书最后阅读到的章节和位置。
 正确：
 
 ```bash
-./readerx --db ./reader.db read 1
+readerx --db ./reader.db read 1
 ```
 
 错误：
 
 ```bash
-./readerx read 1 --db ./reader.db
+readerx read 1 --db ./reader.db
 ```
 
 ## 2. 安装
 
-### 从源码构建
+### 从源码安装
 
 环境要求：
 
 - Go 1.26 或更新版本
 - macOS 或 Linux 终端
 
-构建：
-
-```bash
-make build
-```
-
-生成可执行文件：
-
-```bash
-./readerx
-```
-
-检查命令：
-
-```bash
-./readerx --help
-```
-
-安装为当前用户可全局使用的命令：
+推荐安装方式：
 
 ```bash
 make install
@@ -99,6 +83,12 @@ make install
 
 ```text
 ~/.local/bin/readerx
+```
+
+检查命令：
+
+```bash
+readerx --help
 ```
 
 确保 `~/.local/bin` 已经加入 `PATH`。如果你使用 zsh：
@@ -115,19 +105,20 @@ readerx --help
 make install INSTALL_DIR=/usr/local/bin
 ```
 
+如果只是开发调试，`make build` 会在项目目录生成本地 `readerx` 二进制。
+
 ### 从 Release 安装
 
 从这里下载发布包：
 
 <https://github.com/cengZa/readerx/releases>
 
-解压并运行：
+解压：
 
 ```bash
 tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
 cd readerx_vX.Y.Z_darwin_arm64
 chmod +x readerx
-./readerx --help
 ```
 
 把下载到的二进制安装为当前用户可全局使用的命令：
@@ -143,26 +134,26 @@ readerx --help
 使用仓库内置测试书：
 
 ```bash
-make build
-./readerx --db ./reader.db import ./book.txt
-./readerx --db ./reader.db list
-./readerx --db ./reader.db chapters 1
-./readerx --db ./reader.db read 1
+make install
+readerx import ./book.txt
+readerx list
+readerx chapters 1
+readerx read 1
 ```
 
 使用你自己的书籍：
 
 ```bash
-./readerx import /path/to/book.txt
-./readerx import /path/to/book.epub
-./readerx list
-./readerx read 1
+readerx import /path/to/book.txt
+readerx import /path/to/book.epub
+readerx list
+readerx read 1
 ```
 
 ## 4. 全局命令格式
 
 ```bash
-./readerx [全局参数] <命令> [命令参数]
+readerx [全局参数] <命令> [命令参数]
 ```
 
 全局参数：
@@ -174,7 +165,7 @@ make build
 示例：
 
 ```bash
-./readerx --db ./reader.db search "剑气"
+readerx --db ./reader.db search "剑气"
 ```
 
 ## 5. 命令说明
@@ -184,15 +175,15 @@ make build
 查看根命令帮助：
 
 ```bash
-./readerx --help
+readerx --help
 ```
 
 查看某个命令帮助：
 
 ```bash
-./readerx read --help
-./readerx bookmark --help
-./readerx config --help
+readerx read --help
+readerx bookmark --help
+readerx config --help
 ```
 
 ### 5.2 导入书籍
@@ -200,14 +191,14 @@ make build
 导入本地 TXT 或 EPUB 文件。
 
 ```bash
-./readerx import <file>
+readerx import <file>
 ```
 
 示例：
 
 ```bash
-./readerx import ./book.txt
-./readerx import ./book.epub
+readerx import ./book.txt
+readerx import ./book.epub
 ```
 
 输出示例：
@@ -231,7 +222,7 @@ Book ID：1
 列出已导入书籍。
 
 ```bash
-./readerx list
+readerx list
 ```
 
 输出示例：
@@ -246,13 +237,13 @@ ID  Title  Chapters  Progress  Last Read
 列出某本书的章节元数据。
 
 ```bash
-./readerx chapters <book-id>
+readerx chapters <book-id>
 ```
 
 示例：
 
 ```bash
-./readerx chapters 1
+readerx chapters 1
 ```
 
 输出示例：
@@ -269,27 +260,27 @@ No  Title       Words
 打开 TUI 阅读器：
 
 ```bash
-./readerx read <book-id>
+readerx read <book-id>
 ```
 
 打开指定章节：
 
 ```bash
-./readerx read <book-id> --chapter <chapter-no>
+readerx read <book-id> --chapter <chapter-no>
 ```
 
 不进入 TUI，直接打印纯文本：
 
 ```bash
-./readerx read <book-id> --chapter <chapter-no> --plain
+readerx read <book-id> --chapter <chapter-no> --plain
 ```
 
 示例：
 
 ```bash
-./readerx read 1
-./readerx read 1 --chapter 2
-./readerx read 1 --chapter 2 --plain
+readerx read 1
+readerx read 1 --chapter 2
+readerx read 1 --chapter 2 --plain
 ```
 
 参数：
@@ -304,13 +295,13 @@ No  Title       Words
 继续最近阅读的书籍。
 
 ```bash
-./readerx continue
+readerx continue
 ```
 
 纯文本输出：
 
 ```bash
-./readerx continue --plain
+readerx continue --plain
 ```
 
 参数：
@@ -324,15 +315,15 @@ No  Title       Words
 搜索已导入书籍。
 
 ```bash
-./readerx search <keyword>
+readerx search <keyword>
 ```
 
 示例：
 
 ```bash
-./readerx search "剑气"
-./readerx search "剑气" --book 1
-./readerx search "剑气" --limit 10
+readerx search "剑气"
+readerx search "剑气" --book 1
+readerx search "剑气" --limit 10
 ```
 
 参数：
@@ -363,8 +354,8 @@ No  Title       Words
 在某本书当前保存的阅读位置添加书签。
 
 ```bash
-./readerx bookmark add <book-id>
-./readerx bookmark add <book-id> --note "important moment"
+readerx bookmark add <book-id>
+readerx bookmark add <book-id> --note "important moment"
 ```
 
 参数：
@@ -378,8 +369,8 @@ No  Title       Words
 #### 查看书签
 
 ```bash
-./readerx bookmark list
-./readerx bookmark list --book <book-id>
+readerx bookmark list
+readerx bookmark list --book <book-id>
 ```
 
 参数：
@@ -391,7 +382,7 @@ No  Title       Words
 #### 删除书签
 
 ```bash
-./readerx bookmark remove <bookmark-id>
+readerx bookmark remove <bookmark-id>
 ```
 
 ### 5.9 笔记
@@ -401,7 +392,7 @@ No  Title       Words
 在某本书当前保存的阅读位置添加笔记。
 
 ```bash
-./readerx note add <book-id> --content "review this section"
+readerx note add <book-id> --content "review this section"
 ```
 
 参数：
@@ -415,8 +406,8 @@ No  Title       Words
 #### 查看笔记
 
 ```bash
-./readerx note list
-./readerx note list --book <book-id>
+readerx note list
+readerx note list --book <book-id>
 ```
 
 参数：
@@ -428,7 +419,7 @@ No  Title       Words
 #### 删除笔记
 
 ```bash
-./readerx note remove <note-id>
+readerx note remove <note-id>
 ```
 
 ### 5.10 导出
@@ -440,14 +431,14 @@ No  Title       Words
 打印到 stdout：
 
 ```bash
-./readerx export bookmarks
-./readerx export bookmarks --book 1
+readerx export bookmarks
+readerx export bookmarks --book 1
 ```
 
 写入文件：
 
 ```bash
-./readerx export bookmarks --book 1 -o bookmarks.md
+readerx export bookmarks --book 1 -o bookmarks.md
 ```
 
 #### 导出笔记
@@ -455,14 +446,14 @@ No  Title       Words
 打印到 stdout：
 
 ```bash
-./readerx export notes
-./readerx export notes --book 1
+readerx export notes
+readerx export notes --book 1
 ```
 
 写入文件：
 
 ```bash
-./readerx export notes --book 1 -o notes.md
+readerx export notes --book 1 -o notes.md
 ```
 
 参数：
@@ -477,21 +468,21 @@ No  Title       Words
 查看全部配置：
 
 ```bash
-./readerx config list
+readerx config list
 ```
 
 读取单个配置：
 
 ```bash
-./readerx config get search.limit
+readerx config get search.limit
 ```
 
 设置配置：
 
 ```bash
-./readerx config set search.limit 25
-./readerx config set reader.width 100
-./readerx config set reader.theme dark
+readerx config set search.limit 25
+readerx config set reader.width 100
+readerx config set reader.theme dark
 ```
 
 支持的配置项：
@@ -513,7 +504,7 @@ search.limit   正整数
 打开：
 
 ```bash
-./readerx read 1
+readerx read 1
 ```
 
 快捷键：
@@ -569,40 +560,40 @@ ReaderX 会保存当前书籍、章节、行偏移、字符偏移和摘录。
 ### 阅读一本新的 TXT 书
 
 ```bash
-./readerx import ./book.txt
-./readerx list
-./readerx read 1
+readerx import ./book.txt
+readerx list
+readerx read 1
 ```
 
 ### 阅读 EPUB
 
 ```bash
-./readerx import ./book.epub
-./readerx list
-./readerx chapters 1
-./readerx read 1
+readerx import ./book.epub
+readerx list
+readerx chapters 1
+readerx read 1
 ```
 
 ### 使用项目内测试数据库
 
 ```bash
-./readerx --db ./reader.db import ./book.txt
-./readerx --db ./reader.db list
-./readerx --db ./reader.db read 1
+readerx --db ./reader.db import ./book.txt
+readerx --db ./reader.db list
+readerx --db ./reader.db read 1
 ```
 
 ### 搜索后手动跳转
 
 ```bash
-./readerx search "白鹿" --book 1
-./readerx read 1 --chapter 3
+readerx search "白鹿" --book 1
+readerx read 1 --chapter 3
 ```
 
 ### 导出阅读沉淀
 
 ```bash
-./readerx export bookmarks --book 1 -o bookmarks.md
-./readerx export notes --book 1 -o notes.md
+readerx export bookmarks --book 1 -o bookmarks.md
+readerx export notes --book 1 -o notes.md
 ```
 
 ## 8. 开发命令

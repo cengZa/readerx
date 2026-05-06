@@ -40,10 +40,12 @@ Default database:
 ~/.readerx/reader.db
 ```
 
+This is the normal database for daily use. You do not need to pass `--db` unless you want a temporary or project-local test database.
+
 Use another database with the global `--db` flag:
 
 ```bash
-./readerx --db ./reader.db list
+readerx --db ./reader.db list
 ```
 
 Important: `--db` must appear before the subcommand.
@@ -51,43 +53,25 @@ Important: `--db` must appear before the subcommand.
 Correct:
 
 ```bash
-./readerx --db ./reader.db read 1
+readerx --db ./reader.db read 1
 ```
 
 Incorrect:
 
 ```bash
-./readerx read 1 --db ./reader.db
+readerx read 1 --db ./reader.db
 ```
 
 ## 2. Installation
 
-### Build From Source
+### Install From Source
 
 Requirements:
 
 - Go 1.26 or newer
 - macOS or Linux terminal
 
-Build:
-
-```bash
-make build
-```
-
-This creates:
-
-```bash
-./readerx
-```
-
-Check:
-
-```bash
-./readerx --help
-```
-
-Install globally for your user:
+Recommended install:
 
 ```bash
 make install
@@ -97,6 +81,12 @@ By default this installs:
 
 ```text
 ~/.local/bin/readerx
+```
+
+Check:
+
+```bash
+readerx --help
 ```
 
 Make sure `~/.local/bin` is in your `PATH`. For zsh:
@@ -113,19 +103,20 @@ You can also install to another directory:
 make install INSTALL_DIR=/usr/local/bin
 ```
 
+For local development, `make build` creates a project-local `readerx` binary.
+
 ### Install From Release
 
 Download a release archive from:
 
 <https://github.com/cengZa/readerx/releases>
 
-Extract and run:
+Extract:
 
 ```bash
 tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
 cd readerx_vX.Y.Z_darwin_arm64
 chmod +x readerx
-./readerx --help
 ```
 
 Install the downloaded binary globally for your user:
@@ -141,26 +132,26 @@ readerx --help
 Use the included sample book:
 
 ```bash
-make build
-./readerx --db ./reader.db import ./book.txt
-./readerx --db ./reader.db list
-./readerx --db ./reader.db chapters 1
-./readerx --db ./reader.db read 1
+make install
+readerx import ./book.txt
+readerx list
+readerx chapters 1
+readerx read 1
 ```
 
 Use your own book:
 
 ```bash
-./readerx import /path/to/book.txt
-./readerx import /path/to/book.epub
-./readerx list
-./readerx read 1
+readerx import /path/to/book.txt
+readerx import /path/to/book.epub
+readerx list
+readerx read 1
 ```
 
 ## 4. Global Command Format
 
 ```bash
-./readerx [global flags] <command> [command flags]
+readerx [global flags] <command> [command flags]
 ```
 
 Global flags:
@@ -172,7 +163,7 @@ Global flags:
 Example:
 
 ```bash
-./readerx --db ./reader.db search "剑气"
+readerx --db ./reader.db search "剑气"
 ```
 
 ## 5. Commands
@@ -182,15 +173,15 @@ Example:
 Show root help:
 
 ```bash
-./readerx --help
+readerx --help
 ```
 
 Show command help:
 
 ```bash
-./readerx read --help
-./readerx bookmark --help
-./readerx config --help
+readerx read --help
+readerx bookmark --help
+readerx config --help
 ```
 
 ### 5.2 Import
@@ -198,14 +189,14 @@ Show command help:
 Import a local TXT or EPUB file.
 
 ```bash
-./readerx import <file>
+readerx import <file>
 ```
 
 Examples:
 
 ```bash
-./readerx import ./book.txt
-./readerx import ./book.epub
+readerx import ./book.txt
+readerx import ./book.epub
 ```
 
 Output example:
@@ -229,7 +220,7 @@ Notes:
 List imported books.
 
 ```bash
-./readerx list
+readerx list
 ```
 
 Output example:
@@ -244,13 +235,13 @@ ID  Title  Chapters  Progress  Last Read
 List chapter metadata for a book.
 
 ```bash
-./readerx chapters <book-id>
+readerx chapters <book-id>
 ```
 
 Example:
 
 ```bash
-./readerx chapters 1
+readerx chapters 1
 ```
 
 Output example:
@@ -267,27 +258,27 @@ No  Title       Words
 Open a book in the TUI reader.
 
 ```bash
-./readerx read <book-id>
+readerx read <book-id>
 ```
 
 Open a specific chapter:
 
 ```bash
-./readerx read <book-id> --chapter <chapter-no>
+readerx read <book-id> --chapter <chapter-no>
 ```
 
 Print plain text instead of opening the TUI:
 
 ```bash
-./readerx read <book-id> --chapter <chapter-no> --plain
+readerx read <book-id> --chapter <chapter-no> --plain
 ```
 
 Examples:
 
 ```bash
-./readerx read 1
-./readerx read 1 --chapter 2
-./readerx read 1 --chapter 2 --plain
+readerx read 1
+readerx read 1 --chapter 2
+readerx read 1 --chapter 2 --plain
 ```
 
 Flags:
@@ -302,13 +293,13 @@ Flags:
 Continue the most recently read book.
 
 ```bash
-./readerx continue
+readerx continue
 ```
 
 Plain output:
 
 ```bash
-./readerx continue --plain
+readerx continue --plain
 ```
 
 Flags:
@@ -322,15 +313,15 @@ Flags:
 Search imported books.
 
 ```bash
-./readerx search <keyword>
+readerx search <keyword>
 ```
 
 Examples:
 
 ```bash
-./readerx search "剑气"
-./readerx search "剑气" --book 1
-./readerx search "剑气" --limit 10
+readerx search "剑气"
+readerx search "剑气" --book 1
+readerx search "剑气" --limit 10
 ```
 
 Flags:
@@ -361,8 +352,8 @@ Output example:
 Add a bookmark at the saved reading position of a book.
 
 ```bash
-./readerx bookmark add <book-id>
-./readerx bookmark add <book-id> --note "important moment"
+readerx bookmark add <book-id>
+readerx bookmark add <book-id> --note "important moment"
 ```
 
 Flags:
@@ -376,8 +367,8 @@ You can also add a bookmark inside the TUI by pressing `b`.
 #### List Bookmarks
 
 ```bash
-./readerx bookmark list
-./readerx bookmark list --book <book-id>
+readerx bookmark list
+readerx bookmark list --book <book-id>
 ```
 
 Flags:
@@ -389,7 +380,7 @@ Flags:
 #### Remove Bookmark
 
 ```bash
-./readerx bookmark remove <bookmark-id>
+readerx bookmark remove <bookmark-id>
 ```
 
 ### 5.9 Notes
@@ -399,7 +390,7 @@ Flags:
 Add a note at the saved reading position of a book.
 
 ```bash
-./readerx note add <book-id> --content "review this section"
+readerx note add <book-id> --content "review this section"
 ```
 
 Flags:
@@ -413,8 +404,8 @@ You can also add a note inside the TUI by pressing `m`.
 #### List Notes
 
 ```bash
-./readerx note list
-./readerx note list --book <book-id>
+readerx note list
+readerx note list --book <book-id>
 ```
 
 Flags:
@@ -426,7 +417,7 @@ Flags:
 #### Remove Note
 
 ```bash
-./readerx note remove <note-id>
+readerx note remove <note-id>
 ```
 
 ### 5.10 Export
@@ -438,14 +429,14 @@ Export bookmarks or notes as Markdown.
 Print to stdout:
 
 ```bash
-./readerx export bookmarks
-./readerx export bookmarks --book 1
+readerx export bookmarks
+readerx export bookmarks --book 1
 ```
 
 Write to file:
 
 ```bash
-./readerx export bookmarks --book 1 -o bookmarks.md
+readerx export bookmarks --book 1 -o bookmarks.md
 ```
 
 #### Export Notes
@@ -453,14 +444,14 @@ Write to file:
 Print to stdout:
 
 ```bash
-./readerx export notes
-./readerx export notes --book 1
+readerx export notes
+readerx export notes --book 1
 ```
 
 Write to file:
 
 ```bash
-./readerx export notes --book 1 -o notes.md
+readerx export notes --book 1 -o notes.md
 ```
 
 Flags:
@@ -475,21 +466,21 @@ Flags:
 List config:
 
 ```bash
-./readerx config list
+readerx config list
 ```
 
 Get one value:
 
 ```bash
-./readerx config get search.limit
+readerx config get search.limit
 ```
 
 Set one value:
 
 ```bash
-./readerx config set search.limit 25
-./readerx config set reader.width 100
-./readerx config set reader.theme dark
+readerx config set search.limit 25
+readerx config set reader.width 100
+readerx config set reader.theme dark
 ```
 
 Supported keys:
@@ -511,7 +502,7 @@ Effects:
 Open:
 
 ```bash
-./readerx read 1
+readerx read 1
 ```
 
 Keys:
@@ -567,40 +558,40 @@ Cancel with Esc.
 ### Read a New TXT Book
 
 ```bash
-./readerx import ./book.txt
-./readerx list
-./readerx read 1
+readerx import ./book.txt
+readerx list
+readerx read 1
 ```
 
 ### Read an EPUB
 
 ```bash
-./readerx import ./book.epub
-./readerx list
-./readerx chapters 1
-./readerx read 1
+readerx import ./book.epub
+readerx list
+readerx chapters 1
+readerx read 1
 ```
 
 ### Use a Project-Local Test Database
 
 ```bash
-./readerx --db ./reader.db import ./book.txt
-./readerx --db ./reader.db list
-./readerx --db ./reader.db read 1
+readerx --db ./reader.db import ./book.txt
+readerx --db ./reader.db list
+readerx --db ./reader.db read 1
 ```
 
 ### Search and Jump Manually
 
 ```bash
-./readerx search "白鹿" --book 1
-./readerx read 1 --chapter 3
+readerx search "白鹿" --book 1
+readerx read 1 --chapter 3
 ```
 
 ### Export Reading Notes
 
 ```bash
-./readerx export bookmarks --book 1 -o bookmarks.md
-./readerx export notes --book 1 -o notes.md
+readerx export bookmarks --book 1 -o bookmarks.md
+readerx export notes --book 1 -o notes.md
 ```
 
 ## 8. Development Commands

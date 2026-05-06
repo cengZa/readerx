@@ -23,19 +23,21 @@ ReaderX is not a downloader or scraper. It is designed for local files you own o
 ## Quick Start
 
 ```bash
-make build
-./readerx --db ./reader.db import ./book.txt
-./readerx --db ./reader.db list
-./readerx --db ./reader.db chapters 1
-./readerx --db ./reader.db read 1
+make install
+readerx import ./book.txt
+readerx list
+readerx chapters 1
+readerx read 1
 ```
 
 Use your own files:
 
 ```bash
-./readerx import /path/to/book.txt
-./readerx import /path/to/book.epub
+readerx import /path/to/book.txt
+readerx import /path/to/book.epub
 ```
+
+By default ReaderX stores its library at `~/.readerx/reader.db`; you do not need to pass `--db` for normal use.
 
 ## Install
 
@@ -65,6 +67,8 @@ Install somewhere else:
 make install INSTALL_DIR=/usr/local/bin
 ```
 
+For local development, `make build` creates a project-local `readerx` binary.
+
 Download release archives:
 
 <https://github.com/cengZa/readerx/releases>
@@ -75,7 +79,6 @@ After downloading:
 tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
 cd readerx_vX.Y.Z_darwin_arm64
 chmod +x readerx
-./readerx --help
 ```
 
 Install the downloaded binary globally for your user:
