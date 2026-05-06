@@ -142,6 +142,32 @@ FROM books WHERE id = ?`, bookID).Scan(&book.ID, &book.SourceType, &book.SourceB
 	return book, nil
 }
 
+func (s *SQLiteStore) ListChapters(bookID int64) ([]domain.Chapter, error) {
+	rows, err := s.db.Query(`
+SELECT id, book_id, chapter_no, source_chapter_id, title, content_status, content_hash, word_count, created_at, updated_at
+FROM chapters
+WHERE book_id = ?
+ORDER BY chapter_no ASC`, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("list chapters: %w", err)
+	}
+	defer rows.Close()
+
+	var chapters []domain.Chapter
+	for rows.Next() {
+		var chapter domain.Chapter
+		if err := rows.Scan(&chapter.ID, &chapter.BookID, &chapter.ChapterNo, &chapter.SourceChapterID, &chapter.Title,
+			&chapter.ContentStatus, &chapter.ContentHash, &chapter.WordCount, &chapter.CreatedAt, &chapter.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan chapter: %w", err)
+		}
+		chapters = append(chapters, chapter)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate chapters: %w", err)
+	}
+	return chapters, nil
+}
+
 func (s *SQLiteStore) GetChapter(bookID int64, chapterNo int) (domain.Chapter, error) {
 	var chapter domain.Chapter
 	err := s.db.QueryRow(`

@@ -45,6 +45,20 @@ func TestSQLiteStoreCreatesAndReadsBookWithChapters(t *testing.T) {
 	if chapter.Title != "第二章" || chapter.Content != "第二段" {
 		t.Fatalf("chapter = %#v", chapter)
 	}
+
+	chapters, err := store.ListChapters(bookID)
+	if err != nil {
+		t.Fatalf("ListChapters: %v", err)
+	}
+	if len(chapters) != 2 {
+		t.Fatalf("chapter count = %d, want 2", len(chapters))
+	}
+	if chapters[0].Content != "" {
+		t.Fatalf("ListChapters should not load full content, got %q", chapters[0].Content)
+	}
+	if chapters[1].Title != "第二章" || chapters[1].WordCount != 3 {
+		t.Fatalf("chapter metadata = %#v", chapters[1])
+	}
 }
 
 func TestSQLiteStoreRejectsDuplicateContentHash(t *testing.T) {

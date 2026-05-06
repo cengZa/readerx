@@ -9,6 +9,7 @@ make build
 ./readerx import ./book.txt
 ./readerx import ./book.epub
 ./readerx list
+./readerx chapters 1
 ./readerx read 1 --chapter 1
 ./readerx continue
 ```
@@ -19,6 +20,7 @@ During development you can also use `go run` directly:
 go run . import ./book.txt
 go run . import ./book.epub
 go run . list
+go run . chapters 1
 go run . read 1 --chapter 1
 go run . continue
 go run . search "keyword"
