@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/heybox/readerx/internal/domain"
@@ -48,6 +49,25 @@ func TestNoteServiceListsAndRemoves(t *testing.T) {
 	}
 	if len(notes) != 0 {
 		t.Fatalf("notes after remove = %#v", notes)
+	}
+}
+
+func TestNoteServiceExportsMarkdown(t *testing.T) {
+	store, bookID := seedNoteBook(t)
+	defer store.Close()
+	service := NewNoteService(store)
+	if _, err := service.AddAt(domain.Note{BookID: bookID, ChapterNo: 1, Content: "笔记内容"}); err != nil {
+		t.Fatalf("AddAt: %v", err)
+	}
+
+	markdown, err := service.ExportMarkdown(bookID)
+	if err != nil {
+		t.Fatalf("ExportMarkdown: %v", err)
+	}
+	for _, want := range []string{"# Notes", "笔记书", "第一章", "笔记内容"} {
+		if !strings.Contains(markdown, want) {
+			t.Fatalf("markdown missing %q:\n%s", want, markdown)
+		}
 	}
 }
 

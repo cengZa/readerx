@@ -1,9 +1,11 @@
 package app
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/heybox/readerx/internal/domain"
 	"github.com/heybox/readerx/internal/storage"
@@ -69,6 +71,33 @@ func (s *BookmarkService) List(bookID int64) ([]domain.Bookmark, error) {
 
 func (s *BookmarkService) Remove(bookmarkID int64) error {
 	return s.store.RemoveBookmark(bookmarkID)
+}
+
+func (s *BookmarkService) ExportMarkdown(bookID int64) (string, error) {
+	bookmarks, err := s.store.ListBookmarks(bookID)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	buf.WriteString("# Bookmarks\n\n")
+	if len(bookmarks) == 0 {
+		buf.WriteString("_No bookmarks._\n")
+		return buf.String(), nil
+	}
+	for _, bookmark := range bookmarks {
+		fmt.Fprintf(&buf, "## %s / Chapter %d %s\n\n", bookmark.BookTitle, bookmark.ChapterNo, bookmark.ChapterTitle)
+		if bookmark.CreatedAt > 0 {
+			fmt.Fprintf(&buf, "- Created: %s\n", time.Unix(bookmark.CreatedAt, 0).Format("2006-01-02 15:04"))
+		}
+		fmt.Fprintf(&buf, "- Location: line %d, char %d\n\n", bookmark.LineOffset, bookmark.CharOffset)
+		if strings.TrimSpace(bookmark.Excerpt) != "" {
+			fmt.Fprintf(&buf, "> %s\n\n", strings.ReplaceAll(strings.TrimSpace(bookmark.Excerpt), "\n", "\n> "))
+		}
+		if strings.TrimSpace(bookmark.Note) != "" {
+			fmt.Fprintf(&buf, "Note: %s\n\n", strings.TrimSpace(bookmark.Note))
+		}
+	}
+	return buf.String(), nil
 }
 
 func excerptAt(content string, charOffset, length int) string {

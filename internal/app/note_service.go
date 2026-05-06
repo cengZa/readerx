@@ -1,9 +1,11 @@
 package app
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/heybox/readerx/internal/domain"
 	"github.com/heybox/readerx/internal/storage"
@@ -59,4 +61,26 @@ func (s *NoteService) List(bookID int64) ([]domain.Note, error) {
 
 func (s *NoteService) Remove(noteID int64) error {
 	return s.store.RemoveNote(noteID)
+}
+
+func (s *NoteService) ExportMarkdown(bookID int64) (string, error) {
+	notes, err := s.store.ListNotes(bookID)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	buf.WriteString("# Notes\n\n")
+	if len(notes) == 0 {
+		buf.WriteString("_No notes._\n")
+		return buf.String(), nil
+	}
+	for _, note := range notes {
+		fmt.Fprintf(&buf, "## %s / Chapter %d %s\n\n", note.BookTitle, note.ChapterNo, note.ChapterTitle)
+		if note.UpdatedAt > 0 {
+			fmt.Fprintf(&buf, "- Updated: %s\n", time.Unix(note.UpdatedAt, 0).Format("2006-01-02 15:04"))
+		}
+		fmt.Fprintf(&buf, "- Location: line %d, char %d\n\n", note.LineOffset, note.CharOffset)
+		fmt.Fprintf(&buf, "%s\n\n", strings.TrimSpace(note.Content))
+	}
+	return buf.String(), nil
 }

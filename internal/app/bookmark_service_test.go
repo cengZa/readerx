@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/heybox/readerx/internal/domain"
@@ -48,6 +49,25 @@ func TestBookmarkServiceListsAndRemoves(t *testing.T) {
 	}
 	if len(bookmarks) != 0 {
 		t.Fatalf("bookmarks after remove = %#v", bookmarks)
+	}
+}
+
+func TestBookmarkServiceExportsMarkdown(t *testing.T) {
+	store, bookID := seedBook(t)
+	defer store.Close()
+	service := NewBookmarkService(store)
+	if _, err := service.AddAt(domain.Bookmark{BookID: bookID, ChapterNo: 1, Excerpt: "摘录内容", Note: "备注"}); err != nil {
+		t.Fatalf("AddAt: %v", err)
+	}
+
+	markdown, err := service.ExportMarkdown(bookID)
+	if err != nil {
+		t.Fatalf("ExportMarkdown: %v", err)
+	}
+	for _, want := range []string{"# Bookmarks", "测试书", "第一章", "摘录内容", "备注"} {
+		if !strings.Contains(markdown, want) {
+			t.Fatalf("markdown missing %q:\n%s", want, markdown)
+		}
 	}
 }
 

@@ -17,6 +17,7 @@ The project is intentionally not a downloader or platform scraper. It is designe
 - Search imported content with simple SQLite `LIKE` matching
 - Add/list/remove bookmarks
 - Add/list/remove notes
+- Export bookmarks and notes to Markdown
 - Run tests and builds in GitHub Actions CI
 
 ## Requirements
@@ -213,6 +214,22 @@ You can also add a bookmark in the TUI by pressing `b`.
 ./readerx note remove 1
 ```
 
+### Export
+
+Print Markdown:
+
+```bash
+./readerx export bookmarks --book 1
+./readerx export notes --book 1
+```
+
+Write Markdown to files:
+
+```bash
+./readerx export bookmarks --book 1 -o bookmarks.md
+./readerx export notes --book 1 -o notes.md
+```
+
 ## Development
 
 Run without building:
@@ -259,14 +276,13 @@ The CLI layer only parses command arguments and calls application services. Stor
 
 - EPUB support covers common OPF/spine/XHTML books, not every EPUB edge case.
 - Search uses a lightweight ngram index, not a full tokenizer-based search engine.
-- Notes can be stored and listed, but export is not implemented yet.
+- Markdown export is available for bookmarks and notes, but full book export is not implemented yet.
 - Online sources and AI reading features are intentionally out of scope for the current version.
 
 ## Roadmap
 
-- Improve search with ngram or FTS-backed indexing
-- Export notes and bookmarks to Markdown
-- Add in-TUI chapter jump and search panels
+- Add full book export
+- Add richer TUI bookmark/note panels
 - Harden EPUB compatibility with more fixtures
 - Add Homebrew installation
 - Explore optional AI summaries over local content
