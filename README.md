@@ -48,6 +48,30 @@ Clean local build/database artifacts:
 make clean
 ```
 
+## Install From Release
+
+Download a release archive from:
+
+<https://github.com/cengZa/readerx/releases>
+
+Choose the archive for your platform, then install the binary:
+
+```bash
+tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
+cd readerx_vX.Y.Z_darwin_arm64
+chmod +x readerx
+./readerx --help
+```
+
+Optional system-wide install:
+
+```bash
+sudo mv readerx /usr/local/bin/readerx
+readerx --help
+```
+
+Releases are built automatically when a tag like `v0.1.0` is pushed.
+
 ## Quick Start
 
 Use the included sample book:
@@ -202,6 +226,15 @@ go test ./...
 go build ./...
 ```
 
+Create a release tag:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+GitHub Actions will run tests, build macOS/Linux archives, generate checksums, and publish the release.
+
 ## Architecture
 
 ```text
@@ -231,7 +264,7 @@ The CLI layer only parses command arguments and calls application services. Stor
 - Export notes and bookmarks to Markdown
 - Add in-TUI chapter jump and search panels
 - Harden EPUB compatibility with more fixtures
-- Add GitHub releases and installation packages
+- Add Homebrew installation
 - Explore optional AI summaries over local content
 
 ## Repository
