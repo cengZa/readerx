@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -28,6 +29,12 @@ type ReaderModel struct {
 	width      int
 	height     int
 	err        error
+	jump       jumpState
+}
+
+type jumpState struct {
+	active bool
+	input  string
 }
 
 func NewReaderModel(store ProgressSaver, view app.ChapterView, startLineOffset int) ReaderModel {
@@ -53,6 +60,9 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.repaginate()
 	case tea.KeyMsg:
+		if m.jump.active {
+			return m.updateJump(msg), nil
+		}
 		switch {
 		case key.Matches(msg, keys.quit):
 			m.save()
@@ -73,9 +83,32 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.moveChapter(1)
 		case key.Matches(msg, keys.prevChapter):
 			m.moveChapter(-1)
+		case key.Matches(msg, keys.jumpChapter):
+			m.jump = jumpState{active: true}
+			m.err = nil
 		}
 	}
 	return m, nil
+}
+
+func (m ReaderModel) updateJump(msg tea.KeyMsg) ReaderModel {
+	switch msg.Type {
+	case tea.KeyEsc, tea.KeyCtrlC:
+		m.jump = jumpState{}
+	case tea.KeyEnter:
+		m.commitJump()
+	case tea.KeyBackspace:
+		if len(m.jump.input) > 0 {
+			m.jump.input = m.jump.input[:len(m.jump.input)-1]
+		}
+	case tea.KeyRunes:
+		for _, r := range msg.Runes {
+			if r >= '0' && r <= '9' {
+				m.jump.input += string(r)
+			}
+		}
+	}
+	return m
 }
 
 func (m ReaderModel) View() string {
@@ -83,7 +116,10 @@ func (m ReaderModel) View() string {
 	lines := m.paginator.VisibleLines(m.lineOffset)
 	body := bodyStyle.Width(m.contentWidth()).Render(strings.Join(lines, "\n"))
 	page, total := m.paginator.PageInfo(m.lineOffset)
-	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | b bookmark | s save | q quit", page, total)
+	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | g jump | b bookmark | s save | q quit", page, total)
+	if m.jump.active {
+		statusText = fmt.Sprintf("Go to chapter: %s", m.jump.input)
+	}
 	if m.err != nil {
 		statusText = m.err.Error() + " | " + statusText
 	}
@@ -166,6 +202,42 @@ func (m *ReaderModel) moveChapter(delta int) {
 	m.save()
 }
 
+func (m *ReaderModel) commitJump() {
+	input := strings.TrimSpace(m.jump.input)
+	m.jump = jumpState{}
+	if input == "" {
+		m.err = fmt.Errorf("chapter number required")
+		return
+	}
+	chapterNo, err := strconv.Atoi(input)
+	if err != nil || chapterNo <= 0 {
+		m.err = fmt.Errorf("invalid chapter number: %s", input)
+		return
+	}
+	m.jumpToChapter(chapterNo)
+}
+
+func (m *ReaderModel) jumpToChapter(chapterNo int) {
+	chapterCount, err := m.store.CountChapters(m.view.Book.ID)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if chapterNo < 1 || chapterNo > chapterCount {
+		m.err = fmt.Errorf("chapter %d is out of range 1-%d", chapterNo, chapterCount)
+		return
+	}
+	chapter, err := m.store.GetChapter(m.view.Book.ID, chapterNo)
+	if err != nil {
+		m.err = err
+		return
+	}
+	m.view.Chapter = chapter
+	m.lineOffset = 0
+	m.repaginate()
+	m.save()
+}
+
 func overallPercentage(chapterNo, chapterCount, currentPage, totalPages int) float64 {
 	if chapterCount <= 0 {
 		return 0
@@ -237,6 +309,7 @@ var keys = struct {
 	bookmark    key.Binding
 	nextChapter key.Binding
 	prevChapter key.Binding
+	jumpChapter key.Binding
 }{
 	quit:        key.NewBinding(key.WithKeys("q", "ctrl+c")),
 	down:        key.NewBinding(key.WithKeys("j", "down")),
@@ -247,6 +320,7 @@ var keys = struct {
 	bookmark:    key.NewBinding(key.WithKeys("b")),
 	nextChapter: key.NewBinding(key.WithKeys("n")),
 	prevChapter: key.NewBinding(key.WithKeys("p")),
+	jumpChapter: key.NewBinding(key.WithKeys("g")),
 }
 
 func RunReader(store ProgressSaver, view app.ChapterView, startLineOffset int) error {

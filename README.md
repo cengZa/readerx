@@ -168,6 +168,7 @@ Space      next page
 u          previous page
 n          next chapter
 p          previous chapter
+g          jump to chapter
 b          add bookmark
 s          save progress
 q          quit and save
