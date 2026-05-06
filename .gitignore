@@ -1,0 +1,5 @@
+.DS_Store
+readerx
+*.db
+*.db-shm
+*.db-wal

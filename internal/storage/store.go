@@ -1,0 +1,21 @@
+package storage
+
+import "github.com/heybox/readerx/internal/domain"
+
+type Store interface {
+	CreateBook(book domain.Book) (int64, error)
+	InsertChapters(bookID int64, chapters []domain.Chapter) error
+	ListBooks() ([]domain.Book, error)
+	GetBook(bookID int64) (domain.Book, error)
+	GetChapter(bookID int64, chapterNo int) (domain.Chapter, error)
+	CountChapters(bookID int64) (int, error)
+	SaveProgress(progress domain.Progress) error
+	GetProgress(bookID int64) (domain.Progress, error)
+	GetRecentProgress() (domain.Progress, error)
+	UpdateLastRead(bookID int64) error
+	AddBookmark(bookmark domain.Bookmark) (int64, error)
+	ListBookmarks(bookID int64) ([]domain.Bookmark, error)
+	RemoveBookmark(bookmarkID int64) error
+	SearchChapters(keyword string, bookID int64) ([]domain.SearchResult, error)
+	Close() error
+}
