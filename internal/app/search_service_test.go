@@ -21,7 +21,7 @@ func TestSearchServiceFindsKeyword(t *testing.T) {
 		t.Fatalf("InsertChapters: %v", err)
 	}
 
-	results, err := NewSearchService(store).Search("剑气", 0)
+	results, err := NewSearchService(store).Search("剑气", 0, 50)
 	if err != nil {
 		t.Fatalf("Search: %v", err)
 	}

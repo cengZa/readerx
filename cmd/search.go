@@ -8,6 +8,7 @@ import (
 )
 
 var searchBookID int64
+var searchLimit int
 
 var searchCmd = &cobra.Command{
 	Use:   "search <keyword>",
@@ -20,7 +21,7 @@ var searchCmd = &cobra.Command{
 		}
 		defer store.Close()
 
-		results, err := app.NewSearchService(store).Search(args[0], searchBookID)
+		results, err := app.NewSearchService(store).Search(args[0], searchBookID, searchLimit)
 		if err != nil {
 			return err
 		}
@@ -38,5 +39,6 @@ var searchCmd = &cobra.Command{
 
 func init() {
 	searchCmd.Flags().Int64Var(&searchBookID, "book", 0, "limit search to a book id")
+	searchCmd.Flags().IntVar(&searchLimit, "limit", 50, "maximum number of search results")
 	rootCmd.AddCommand(searchCmd)
 }

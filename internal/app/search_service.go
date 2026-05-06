@@ -16,9 +16,12 @@ func NewSearchService(store storage.Store) *SearchService {
 	return &SearchService{store: store}
 }
 
-func (s *SearchService) Search(keyword string, bookID int64) ([]domain.SearchResult, error) {
+func (s *SearchService) Search(keyword string, bookID int64, limit int) ([]domain.SearchResult, error) {
 	if strings.TrimSpace(keyword) == "" {
 		return nil, fmt.Errorf("keyword must not be empty")
 	}
-	return s.store.SearchChapters(keyword, bookID)
+	if limit <= 0 {
+		limit = 50
+	}
+	return s.store.SearchChapters(keyword, bookID, limit)
 }

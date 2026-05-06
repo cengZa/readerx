@@ -181,6 +181,7 @@ Search all books:
 
 ```bash
 ./readerx search "剑气"
+./readerx search "剑气" --limit 10
 ```
 
 Search one book:
@@ -189,7 +190,7 @@ Search one book:
 ./readerx search "剑气" --book 1
 ```
 
-Current search is intentionally simple. It uses SQLite `LIKE`, which works for basic Chinese keyword search but is not a tokenizer-based full-text engine.
+Current search uses a lightweight SQLite ngram index to narrow candidate chapters, then verifies exact keyword matches and produces snippets. Very short one-character queries fall back to SQLite `LIKE`.
 
 ### Bookmarks
 
@@ -256,7 +257,7 @@ The CLI layer only parses command arguments and calls application services. Stor
 ## Current Limitations
 
 - EPUB support covers common OPF/spine/XHTML books, not every EPUB edge case.
-- Search is basic keyword matching, not high-quality Chinese segmentation.
+- Search uses a lightweight ngram index, not a full tokenizer-based search engine.
 - Notes can be stored and listed, but export is not implemented yet.
 - Online sources and AI reading features are intentionally out of scope for the current version.
 

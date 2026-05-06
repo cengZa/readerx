@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/heybox/readerx/internal/domain"
 	_ "modernc.org/sqlite"
@@ -85,10 +86,17 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	now := time.Now().Unix()
 	for _, chapter := range chapters {
-		_, err := stmt.Exec(bookID, chapter.ChapterNo, chapter.SourceChapterID, chapter.Title, chapter.Content,
+		result, err := stmt.Exec(bookID, chapter.ChapterNo, chapter.SourceChapterID, chapter.Title, chapter.Content,
 			defaultString(chapter.ContentStatus, "cached"), chapter.ContentHash, chapter.WordCount, now, now)
 		if err != nil {
 			return fmt.Errorf("insert chapter %d: %w", chapter.ChapterNo, err)
+		}
+		chapterID, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("read inserted chapter id %d: %w", chapter.ChapterNo, err)
+		}
+		if err := insertChapterSearchTerms(tx, chapterID, chapter.Title+"\n"+chapter.Content); err != nil {
+			return fmt.Errorf("index chapter %d: %w", chapter.ChapterNo, err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
@@ -378,11 +386,58 @@ func (s *SQLiteStore) RemoveNote(noteID int64) error {
 	return nil
 }
 
-func (s *SQLiteStore) SearchChapters(keyword string, bookID int64) ([]domain.SearchResult, error) {
+func (s *SQLiteStore) SearchChapters(keyword string, bookID int64, limit int) ([]domain.SearchResult, error) {
 	keyword = strings.TrimSpace(keyword)
 	if keyword == "" {
 		return nil, fmt.Errorf("keyword must not be empty")
 	}
+	if limit <= 0 {
+		limit = 50
+	}
+	if terms := searchTerms(keyword); len(terms) > 0 {
+		results, err := s.searchChaptersByTerms(keyword, terms, bookID, limit)
+		if err != nil {
+			return nil, err
+		}
+		if len(results) > 0 {
+			return results, nil
+		}
+	}
+	return s.searchChaptersByLike(keyword, bookID, limit)
+}
+
+func (s *SQLiteStore) searchChaptersByTerms(keyword string, terms []string, bookID int64, limit int) ([]domain.SearchResult, error) {
+	placeholders := strings.TrimRight(strings.Repeat("?,", len(terms)), ",")
+	query := fmt.Sprintf(`
+WITH candidate_chapters AS (
+    SELECT chapter_id
+    FROM chapter_search_terms
+    WHERE term IN (%s)
+    GROUP BY chapter_id
+    HAVING COUNT(DISTINCT term) = ?
+)
+SELECT b.id, b.title, c.chapter_no, c.title, c.content
+FROM candidate_chapters cc
+JOIN chapters c ON c.id = cc.chapter_id
+JOIN books b ON b.id = c.book_id
+WHERE (c.title LIKE ? OR c.content LIKE ?)`, placeholders)
+	args := make([]any, 0, len(terms)+4)
+	for _, term := range terms {
+		args = append(args, term)
+	}
+	args = append(args, len(terms))
+	pattern := "%" + keyword + "%"
+	args = append(args, pattern, pattern)
+	if bookID > 0 {
+		query += ` AND b.id = ?`
+		args = append(args, bookID)
+	}
+	query += ` ORDER BY b.last_read_at DESC, b.created_at DESC, c.chapter_no ASC LIMIT ?`
+	args = append(args, limit)
+	return s.scanSearchResults(query, args, keyword)
+}
+
+func (s *SQLiteStore) searchChaptersByLike(keyword string, bookID int64, limit int) ([]domain.SearchResult, error) {
 	query := `
 SELECT b.id, b.title, c.chapter_no, c.title, c.content
 FROM chapters c
@@ -394,7 +449,12 @@ WHERE (c.title LIKE ? OR c.content LIKE ?)`
 		query += ` AND b.id = ?`
 		args = append(args, bookID)
 	}
-	query += ` ORDER BY b.last_read_at DESC, b.created_at DESC, c.chapter_no ASC LIMIT 50`
+	query += ` ORDER BY b.last_read_at DESC, b.created_at DESC, c.chapter_no ASC LIMIT ?`
+	args = append(args, limit)
+	return s.scanSearchResults(query, args, keyword)
+}
+
+func (s *SQLiteStore) scanSearchResults(query string, args []any, keyword string) ([]domain.SearchResult, error) {
 	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("search chapters: %w", err)
@@ -415,6 +475,72 @@ WHERE (c.title LIKE ? OR c.content LIKE ?)`
 		return nil, fmt.Errorf("iterate search results: %w", err)
 	}
 	return results, nil
+}
+
+func insertChapterSearchTerms(tx *sql.Tx, chapterID int64, text string) error {
+	terms := indexTerms(text)
+	if len(terms) == 0 {
+		return nil
+	}
+	stmt, err := tx.Prepare(`INSERT OR IGNORE INTO chapter_search_terms (chapter_id, term) VALUES (?, ?)`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	for _, term := range terms {
+		if _, err := stmt.Exec(chapterID, term); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func indexTerms(text string) []string {
+	runes := normalizedSearchRunes(text)
+	if len(runes) < 2 {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	for n := 2; n <= 3; n++ {
+		if len(runes) < n {
+			continue
+		}
+		for i := 0; i <= len(runes)-n; i++ {
+			term := string(runes[i : i+n])
+			seen[term] = struct{}{}
+		}
+	}
+	terms := make([]string, 0, len(seen))
+	for term := range seen {
+		terms = append(terms, term)
+	}
+	return terms
+}
+
+func searchTerms(keyword string) []string {
+	runes := normalizedSearchRunes(keyword)
+	if len(runes) < 2 {
+		return nil
+	}
+	if len(runes) == 2 {
+		return []string{string(runes)}
+	}
+	terms := make([]string, 0, len(runes)-1)
+	for i := 0; i <= len(runes)-2; i++ {
+		terms = append(terms, string(runes[i:i+2]))
+	}
+	return terms
+}
+
+func normalizedSearchRunes(text string) []rune {
+	text = strings.ToLower(strings.TrimSpace(text))
+	runes := make([]rune, 0, len([]rune(text)))
+	for _, r := range text {
+		if r == '_' || r == '-' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'z') || r > unicode.MaxASCII {
+			runes = append(runes, r)
+		}
+	}
+	return runes
 }
 
 func makeSnippet(content, keyword string, radius int) string {
@@ -494,6 +620,13 @@ CREATE TABLE IF NOT EXISTS chapters (
     FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS chapter_search_terms (
+    chapter_id INTEGER NOT NULL,
+    term TEXT NOT NULL,
+    PRIMARY KEY(chapter_id, term),
+    FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS reading_progress (
     book_id INTEGER PRIMARY KEY,
     chapter_no INTEGER NOT NULL,
@@ -546,6 +679,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 CREATE INDEX IF NOT EXISTS idx_books_last_read_at ON books(last_read_at);
 CREATE INDEX IF NOT EXISTS idx_chapters_book_no ON chapters(book_id, chapter_no);
+CREATE INDEX IF NOT EXISTS idx_chapter_search_terms_term ON chapter_search_terms(term);
 CREATE INDEX IF NOT EXISTS idx_bookmarks_book ON bookmarks(book_id);
 CREATE INDEX IF NOT EXISTS idx_notes_book ON notes(book_id);
 `

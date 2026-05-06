@@ -116,7 +116,7 @@ func TestSQLiteStoreSearchesChapters(t *testing.T) {
 	store, bookID := seedBookWithChapters(t)
 	defer store.Close()
 
-	results, err := store.SearchChapters("第二段", 0)
+	results, err := store.SearchChapters("第二段", 0, 50)
 	if err != nil {
 		t.Fatalf("SearchChapters: %v", err)
 	}
@@ -127,12 +127,48 @@ func TestSQLiteStoreSearchesChapters(t *testing.T) {
 		t.Fatalf("result = %#v", results[0])
 	}
 
-	results, err = store.SearchChapters("第一段", bookID+100)
+	results, err = store.SearchChapters("第一段", bookID+100, 50)
 	if err != nil {
 		t.Fatalf("SearchChapters scoped: %v", err)
 	}
 	if len(results) != 0 {
 		t.Fatalf("scoped results = %#v, want empty", results)
+	}
+}
+
+func TestSQLiteStoreIndexesChapterNgrams(t *testing.T) {
+	store, bookID := seedBookWithChapters(t)
+	defer store.Close()
+
+	var count int
+	err := store.db.QueryRow(`
+SELECT COUNT(*)
+FROM chapter_search_terms st
+JOIN chapters c ON c.id = st.chapter_id
+WHERE c.book_id = ? AND st.term = ?`, bookID, "第二").Scan(&count)
+	if err != nil {
+		t.Fatalf("count search terms: %v", err)
+	}
+	if count == 0 {
+		t.Fatalf("expected ngram index to contain term 第二")
+	}
+}
+
+func TestSQLiteStoreSearchLimit(t *testing.T) {
+	store, bookID := seedBookWithChapters(t)
+	defer store.Close()
+	if err := store.InsertChapters(bookID, []domain.Chapter{
+		{ChapterNo: 3, Title: "第三章", Content: "第一段延续", WordCount: 5},
+	}); err != nil {
+		t.Fatalf("InsertChapters: %v", err)
+	}
+
+	results, err := store.SearchChapters("第一段", 0, 1)
+	if err != nil {
+		t.Fatalf("SearchChapters: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("result count = %d, want 1: %#v", len(results), results)
 	}
 }
 

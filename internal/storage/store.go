@@ -20,6 +20,6 @@ type Store interface {
 	AddNote(note domain.Note) (int64, error)
 	ListNotes(bookID int64) ([]domain.Note, error)
 	RemoveNote(noteID int64) error
-	SearchChapters(keyword string, bookID int64) ([]domain.SearchResult, error)
+	SearchChapters(keyword string, bookID int64, limit int) ([]domain.SearchResult, error)
 	Close() error
 }
