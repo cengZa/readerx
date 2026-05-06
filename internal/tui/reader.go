@@ -17,6 +17,7 @@ type ProgressSaver interface {
 	SaveProgress(progress domain.Progress) error
 	UpdateLastRead(bookID int64) error
 	AddBookmark(bookmark domain.Bookmark) (int64, error)
+	AddNote(note domain.Note) (int64, error)
 	GetChapter(bookID int64, chapterNo int) (domain.Chapter, error)
 	CountChapters(bookID int64) (int, error)
 }
@@ -30,9 +31,15 @@ type ReaderModel struct {
 	height     int
 	err        error
 	jump       jumpState
+	note       noteState
 }
 
 type jumpState struct {
+	active bool
+	input  string
+}
+
+type noteState struct {
 	active bool
 	input  string
 }
@@ -63,6 +70,9 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.jump.active {
 			return m.updateJump(msg), nil
 		}
+		if m.note.active {
+			return m.updateNote(msg), nil
+		}
 		switch {
 		case key.Matches(msg, keys.quit):
 			m.save()
@@ -85,6 +95,9 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.moveChapter(-1)
 		case key.Matches(msg, keys.jumpChapter):
 			m.jump = jumpState{active: true}
+			m.err = nil
+		case key.Matches(msg, keys.addNote):
+			m.note = noteState{active: true}
 			m.err = nil
 		}
 	}
@@ -111,6 +124,24 @@ func (m ReaderModel) updateJump(msg tea.KeyMsg) ReaderModel {
 	return m
 }
 
+func (m ReaderModel) updateNote(msg tea.KeyMsg) ReaderModel {
+	switch msg.Type {
+	case tea.KeyEsc, tea.KeyCtrlC:
+		m.note = noteState{}
+	case tea.KeyEnter:
+		m.commitNote()
+	case tea.KeyBackspace:
+		if len(m.note.input) > 0 {
+			m.note.input = m.note.input[:len(m.note.input)-1]
+		}
+	case tea.KeySpace:
+		m.note.input += " "
+	case tea.KeyRunes:
+		m.note.input += string(msg.Runes)
+	}
+	return m
+}
+
 func (m ReaderModel) View() string {
 	title := titleStyle.Render(fmt.Sprintf("《%s》 %s", m.view.Book.Title, m.view.Chapter.Title))
 	lines := m.paginator.VisibleLines(m.lineOffset)
@@ -119,6 +150,9 @@ func (m ReaderModel) View() string {
 	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | g jump | b bookmark | s save | q quit", page, total)
 	if m.jump.active {
 		statusText = fmt.Sprintf("Go to chapter: %s", m.jump.input)
+	}
+	if m.note.active {
+		statusText = fmt.Sprintf("Add note: %s", m.note.input)
 	}
 	if m.err != nil {
 		statusText = m.err.Error() + " | " + statusText
@@ -275,6 +309,32 @@ func (m *ReaderModel) addBookmark() {
 	m.err = fmt.Errorf("bookmark saved: %d", id)
 }
 
+func (m *ReaderModel) commitNote() {
+	input := strings.TrimSpace(m.note.input)
+	m.note = noteState{}
+	if input == "" {
+		m.err = fmt.Errorf("note content required")
+		return
+	}
+	m.save()
+	if m.err != nil {
+		return
+	}
+	charOffset := m.paginator.CharOffsetForLine(m.lineOffset)
+	id, err := m.store.AddNote(domain.Note{
+		BookID:     m.view.Book.ID,
+		ChapterNo:  m.view.Chapter.ChapterNo,
+		LineOffset: m.lineOffset,
+		CharOffset: charOffset,
+		Content:    input,
+	})
+	if err != nil {
+		m.err = err
+		return
+	}
+	m.err = fmt.Errorf("note saved: %d", id)
+}
+
 func excerptFrom(content string, charOffset, length int) string {
 	runes := []rune(content)
 	if len(runes) == 0 {
@@ -310,6 +370,7 @@ var keys = struct {
 	nextChapter key.Binding
 	prevChapter key.Binding
 	jumpChapter key.Binding
+	addNote     key.Binding
 }{
 	quit:        key.NewBinding(key.WithKeys("q", "ctrl+c")),
 	down:        key.NewBinding(key.WithKeys("j", "down")),
@@ -321,6 +382,7 @@ var keys = struct {
 	nextChapter: key.NewBinding(key.WithKeys("n")),
 	prevChapter: key.NewBinding(key.WithKeys("p")),
 	jumpChapter: key.NewBinding(key.WithKeys("g")),
+	addNote:     key.NewBinding(key.WithKeys("m")),
 }
 
 func RunReader(store ProgressSaver, view app.ChapterView, startLineOffset int) error {

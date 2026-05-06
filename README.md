@@ -170,6 +170,7 @@ n          next chapter
 p          previous chapter
 g          jump to chapter
 b          add bookmark
+m          add note
 s          save progress
 q          quit and save
 ```

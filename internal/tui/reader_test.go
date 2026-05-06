@@ -91,6 +91,38 @@ func TestReaderModelCancelsJumpMode(t *testing.T) {
 	}
 }
 
+func TestReaderModelAddsTypedNote(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			1: {BookID: 1, ChapterNo: 1, Title: "第一章", Content: "内容一"},
+		},
+		chapterCount: 1,
+	}
+	model := NewReaderModel(store, app.ChapterView{Book: store.book, Chapter: store.chapters[1]}, 0)
+
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	note := updated.(ReaderModel)
+	if !note.note.active {
+		t.Fatalf("note mode should be active")
+	}
+
+	updated, _ = note.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("hello")})
+	note = updated.(ReaderModel)
+	if note.note.input != "hello" {
+		t.Fatalf("note input = %q, want hello", note.note.input)
+	}
+
+	updated, _ = note.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	added := updated.(ReaderModel)
+	if added.note.active {
+		t.Fatalf("note mode should be inactive after enter")
+	}
+	if store.note.Content != "hello" {
+		t.Fatalf("stored note = %#v", store.note)
+	}
+}
+
 func TestOverallPercentageIncludesChapterAndPage(t *testing.T) {
 	got := overallPercentage(2, 4, 2, 2)
 	if got != 37.5 {
@@ -103,6 +135,7 @@ type fakeReaderStore struct {
 	chapters     map[int]domain.Chapter
 	chapterCount int
 	saved        domain.Progress
+	note         domain.Note
 }
 
 func (f *fakeReaderStore) SaveProgress(progress domain.Progress) error {
@@ -115,6 +148,11 @@ func (f *fakeReaderStore) UpdateLastRead(bookID int64) error {
 }
 
 func (f *fakeReaderStore) AddBookmark(bookmark domain.Bookmark) (int64, error) {
+	return 1, nil
+}
+
+func (f *fakeReaderStore) AddNote(note domain.Note) (int64, error) {
+	f.note = note
 	return 1, nil
 }
 
