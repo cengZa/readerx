@@ -21,8 +21,15 @@ func TestPaginatorMovesByPageAndClamps(t *testing.T) {
 	if next := p.NextPage(0); next != 2 {
 		t.Fatalf("next page offset = %d, want 2", next)
 	}
-	if clamped := p.NextPage(4); clamped != 3 {
-		t.Fatalf("clamped next page offset = %d, want 3", clamped)
+	if last := p.NextPage(2); last != 4 {
+		t.Fatalf("last page offset = %d, want 4", last)
+	}
+	if clamped := p.NextPage(4); clamped != 4 {
+		t.Fatalf("clamped next page offset = %d, want 4", clamped)
+	}
+	page, total := p.PageInfo(4)
+	if page != 3 || total != 3 {
+		t.Fatalf("page info at last page = %d/%d, want 3/3", page, total)
 	}
 	if prev := p.PrevPage(1); prev != 0 {
 		t.Fatalf("previous page offset = %d, want 0", prev)

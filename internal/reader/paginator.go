@@ -55,7 +55,7 @@ func (p Paginator) PrevPage(lineOffset int) int {
 }
 
 func (p Paginator) ClampOffset(lineOffset int) int {
-	maxOffset := len(p.lines) - p.pageHeight
+	maxOffset := len(p.lines) - 1
 	if maxOffset < 0 {
 		maxOffset = 0
 	}

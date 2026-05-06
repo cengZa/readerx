@@ -158,6 +158,11 @@ func (a *epubArchive) spineChapters(opfPath string, pkg opfPackage) ([]domain.Ch
 			return nil, fmt.Errorf("read spine item %s: %w", chapterPath, err)
 		}
 		title, content := extractXHTMLText(data)
+		title, content = promoteFirstHeadingLine(title, content)
+		wordCount := countEPUBWords(content)
+		if wordCount == 0 {
+			continue
+		}
 		if title == "" {
 			title = fmt.Sprintf("第 %d 章", len(chapters)+1)
 		}
@@ -168,7 +173,7 @@ func (a *epubArchive) spineChapters(opfPath string, pkg opfPackage) ([]domain.Ch
 			Content:         content,
 			ContentStatus:   "cached",
 			ContentHash:     epubHashString(content),
-			WordCount:       countEPUBWords(content),
+			WordCount:       wordCount,
 		}
 		chapters = append(chapters, chapter)
 	}
@@ -250,6 +255,26 @@ func extractXHTMLText(data []byte) (string, string) {
 		}
 	}
 	return title, strings.TrimSpace(newlineRE.ReplaceAllString(strings.Join(out, "\n"), "\n\n"))
+}
+
+func promoteFirstHeadingLine(title, content string) (string, string) {
+	if title != "" {
+		return title, content
+	}
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		candidate := strings.TrimSpace(line)
+		if candidate == "" {
+			continue
+		}
+		if !chapterHeadingPattern.MatchString(candidate) {
+			return title, content
+		}
+		remaining := append([]string{}, lines[:i]...)
+		remaining = append(remaining, lines[i+1:]...)
+		return candidate, strings.TrimSpace(strings.Join(remaining, "\n"))
+	}
+	return title, content
 }
 
 func cleanInlineHTML(raw string) string {

@@ -34,6 +34,31 @@ func TestParseEPUBReadsMetadataAndSpineChapters(t *testing.T) {
 	}
 }
 
+func TestParseEPUBSkipsEmptySpineItemsAndPromotesFirstHeadingLine(t *testing.T) {
+	path := writeEPUBWithEmptyTitlePage(t)
+
+	_, chapters, err := ParseEPUBFile(path)
+	if err != nil {
+		t.Fatalf("ParseEPUBFile returned error: %v", err)
+	}
+	if len(chapters) != 1 {
+		t.Fatalf("chapter count = %d, want 1", len(chapters))
+	}
+	chapter := chapters[0]
+	if chapter.ChapterNo != 1 {
+		t.Fatalf("chapter no = %d, want 1", chapter.ChapterNo)
+	}
+	if chapter.SourceChapterID != "chapter.html" {
+		t.Fatalf("source chapter id = %q, want chapter.html", chapter.SourceChapterID)
+	}
+	if chapter.Title != "第1章 空屋" {
+		t.Fatalf("chapter title = %q, want 第1章 空屋", chapter.Title)
+	}
+	if chapter.Content != "第一段。\n第二段。" {
+		t.Fatalf("chapter content = %q, want body without heading", chapter.Content)
+	}
+}
+
 func writeTestEPUB(t *testing.T, name string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), name)
@@ -76,6 +101,50 @@ func writeTestEPUB(t *testing.T, name string) string {
 <html xmlns="http://www.w3.org/1999/xhtml"><body>
 <h2>第二章 白鹿渡</h2>
 <p>渡船老人在船头煮茶。</p>
+</body></html>`)
+	return path
+}
+
+func writeEPUBWithEmptyTitlePage(t *testing.T) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "empty-titlepage.epub")
+	file, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("create epub: %v", err)
+	}
+	defer file.Close()
+	writer := zip.NewWriter(file)
+	defer writer.Close()
+
+	writeZipFile(t, writer, "META-INF/container.xml", `<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>`)
+	writeZipFile(t, writer, "content.opf", `<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>空页测试</dc:title>
+  </metadata>
+  <manifest>
+    <item id="cover" href="titlepage.xhtml" media-type="application/xhtml+xml"/>
+    <item id="chapter" href="chapter.html" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine>
+    <itemref idref="cover"/>
+    <itemref idref="chapter"/>
+  </spine>
+</package>`)
+	writeZipFile(t, writer, "titlepage.xhtml", `<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><body>
+<div><svg><image href="cover.jpeg"/></svg></div>
+</body></html>`)
+	writeZipFile(t, writer, "chapter.html", `<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><body>
+<p>第1章 空屋</p>
+<p>第一段。</p>
+<p>第二段。</p>
 </body></html>`)
 	return path
 }
