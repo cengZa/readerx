@@ -1,5 +1,7 @@
 # ReaderX User Manual
 
+Chinese version: [USER_MANUAL.zh-CN.md](USER_MANUAL.zh-CN.md)
+
 This manual explains how to install, configure, and use every current ReaderX command.
 
 ReaderX is a local-first terminal reader. It stores all imported content and reading metadata in a local SQLite database.

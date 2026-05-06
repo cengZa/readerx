@@ -71,6 +71,10 @@ Read the full manual here:
 
 [docs/USER_MANUAL.md](docs/USER_MANUAL.md)
 
+中文版用户手册：
+
+[docs/USER_MANUAL.zh-CN.md](docs/USER_MANUAL.zh-CN.md)
+
 The manual covers every command, flag, TUI key, configuration value, and common workflow.
 
 ## Development
