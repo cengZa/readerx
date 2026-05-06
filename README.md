@@ -194,6 +194,26 @@ Search one book:
 
 Current search uses a lightweight SQLite ngram index to narrow candidate chapters, then verifies exact keyword matches and produces snippets. Very short one-character queries fall back to SQLite `LIKE`.
 
+### Config
+
+```bash
+./readerx config list
+./readerx config get search.limit
+./readerx config set search.limit 25
+./readerx config set reader.width 100
+./readerx config set reader.theme dark
+```
+
+Supported keys:
+
+```text
+reader.width   positive integer
+reader.theme   default, dark, light
+search.limit   positive integer
+```
+
+`search.limit` is used as the default search result limit when `search --limit` is not provided.
+
 ### Bookmarks
 
 ```bash

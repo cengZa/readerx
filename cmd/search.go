@@ -21,7 +21,15 @@ var searchCmd = &cobra.Command{
 		}
 		defer store.Close()
 
-		results, err := app.NewSearchService(store).Search(args[0], searchBookID, searchLimit)
+		limit := searchLimit
+		if !cmd.Flags().Changed("limit") {
+			if configured, err := app.NewConfigService(store).Get("search.limit"); err == nil {
+				if parsed, parseErr := parseIntArg(configured, "search.limit"); parseErr == nil {
+					limit = int(parsed)
+				}
+			}
+		}
+		results, err := app.NewSearchService(store).Search(args[0], searchBookID, limit)
 		if err != nil {
 			return err
 		}

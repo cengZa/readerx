@@ -406,6 +406,51 @@ func (s *SQLiteStore) SearchChapters(keyword string, bookID int64, limit int) ([
 	return s.searchChaptersByLike(keyword, bookID, limit)
 }
 
+func (s *SQLiteStore) SetSetting(key, value string) error {
+	now := time.Now().Unix()
+	_, err := s.db.Exec(`
+INSERT INTO settings (key, value, updated_at)
+VALUES (?, ?, ?)
+ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`, key, value, now)
+	if err != nil {
+		return fmt.Errorf("set setting: %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStore) GetSetting(key string) (string, error) {
+	var value string
+	err := s.db.QueryRow(`SELECT value FROM settings WHERE key = ?`, key).Scan(&value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", fmt.Errorf("get setting: %w", err)
+	}
+	return value, nil
+}
+
+func (s *SQLiteStore) ListSettings() ([]domain.Setting, error) {
+	rows, err := s.db.Query(`SELECT key, value, updated_at FROM settings ORDER BY key ASC`)
+	if err != nil {
+		return nil, fmt.Errorf("list settings: %w", err)
+	}
+	defer rows.Close()
+
+	var settings []domain.Setting
+	for rows.Next() {
+		var setting domain.Setting
+		if err := rows.Scan(&setting.Key, &setting.Value, &setting.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan setting: %w", err)
+		}
+		settings = append(settings, setting)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate settings: %w", err)
+	}
+	return settings, nil
+}
+
 func (s *SQLiteStore) searchChaptersByTerms(keyword string, terms []string, bookID int64, limit int) ([]domain.SearchResult, error) {
 	placeholders := strings.TrimRight(strings.Repeat("?,", len(terms)), ",")
 	query := fmt.Sprintf(`

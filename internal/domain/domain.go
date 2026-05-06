@@ -73,3 +73,9 @@ type SearchResult struct {
 	ChapterTitle string
 	Snippet      string
 }
+
+type Setting struct {
+	Key       string
+	Value     string
+	UpdatedAt int64
+}

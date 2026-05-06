@@ -78,6 +78,35 @@ func TestSQLiteStoreRejectsDuplicateContentHash(t *testing.T) {
 	}
 }
 
+func TestSQLiteStoreManagesSettings(t *testing.T) {
+	store, err := OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	if err := store.SetSetting("reader.theme", "dark"); err != nil {
+		t.Fatalf("SetSetting: %v", err)
+	}
+	value, err := store.GetSetting("reader.theme")
+	if err != nil {
+		t.Fatalf("GetSetting: %v", err)
+	}
+	if value != "dark" {
+		t.Fatalf("setting value = %q, want dark", value)
+	}
+	if err := store.SetSetting("reader.theme", "light"); err != nil {
+		t.Fatalf("SetSetting update: %v", err)
+	}
+	settings, err := store.ListSettings()
+	if err != nil {
+		t.Fatalf("ListSettings: %v", err)
+	}
+	if len(settings) != 1 || settings[0].Key != "reader.theme" || settings[0].Value != "light" {
+		t.Fatalf("settings = %#v", settings)
+	}
+}
+
 func TestSQLiteStoreManagesBookmarks(t *testing.T) {
 	store, bookID := seedBookWithChapters(t)
 	defer store.Close()

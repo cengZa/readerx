@@ -21,5 +21,8 @@ type Store interface {
 	ListNotes(bookID int64) ([]domain.Note, error)
 	RemoveNote(noteID int64) error
 	SearchChapters(keyword string, bookID int64, limit int) ([]domain.SearchResult, error)
+	SetSetting(key, value string) error
+	GetSetting(key string) (string, error)
+	ListSettings() ([]domain.Setting, error)
 	Close() error
 }
