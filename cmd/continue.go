@@ -27,7 +27,7 @@ var continueCmd = &cobra.Command{
 			return err
 		}
 		if !continuePlain && term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stdout.Fd())) {
-			return tui.RunReader(store, view, view.Progress.LineOffset)
+			return tui.RunReader(store, view, view.Progress.LineOffset, readTUIOptions(store))
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "《%s》 %s\n\n%s\n", view.Book.Title, view.Chapter.Title, view.Chapter.Content)
 		return nil

@@ -158,6 +158,21 @@ func TestReaderModelSearchesAndJumpsToResult(t *testing.T) {
 	}
 }
 
+func TestReaderModelUsesConfiguredMaxWidth(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			1: {BookID: 1, ChapterNo: 1, Title: "第一章", Content: "内容一"},
+		},
+		chapterCount: 1,
+	}
+	model := NewReaderModelWithOptions(store, app.ChapterView{Book: store.book, Chapter: store.chapters[1]}, 0, ReaderOptions{MaxWidth: 60})
+	model.width = 120
+	if got := model.contentWidth(); got != 60 {
+		t.Fatalf("content width = %d, want 60", got)
+	}
+}
+
 func TestOverallPercentageIncludesChapterAndPage(t *testing.T) {
 	got := overallPercentage(2, 4, 2, 2)
 	if got != 37.5 {

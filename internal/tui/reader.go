@@ -34,6 +34,19 @@ type ReaderModel struct {
 	jump       jumpState
 	note       noteState
 	search     searchState
+	options    ReaderOptions
+	styles     readerStyles
+}
+
+type ReaderOptions struct {
+	MaxWidth int
+	Theme    string
+}
+
+type readerStyles struct {
+	title  lipgloss.Style
+	body   lipgloss.Style
+	status lipgloss.Style
 }
 
 type jumpState struct {
@@ -55,12 +68,19 @@ type searchState struct {
 }
 
 func NewReaderModel(store ProgressSaver, view app.ChapterView, startLineOffset int) ReaderModel {
+	return NewReaderModelWithOptions(store, view, startLineOffset, ReaderOptions{})
+}
+
+func NewReaderModelWithOptions(store ProgressSaver, view app.ChapterView, startLineOffset int, options ReaderOptions) ReaderModel {
+	options = normalizeOptions(options)
 	model := ReaderModel{
 		store:      store,
 		view:       view,
 		lineOffset: startLineOffset,
 		width:      80,
 		height:     24,
+		options:    options,
+		styles:     stylesForTheme(options.Theme),
 	}
 	model.repaginate()
 	return model
@@ -211,9 +231,9 @@ func (m ReaderModel) updateNote(msg tea.KeyMsg) ReaderModel {
 }
 
 func (m ReaderModel) View() string {
-	title := titleStyle.Render(fmt.Sprintf("《%s》 %s", m.view.Book.Title, m.view.Chapter.Title))
+	title := m.styles.title.Render(fmt.Sprintf("《%s》 %s", m.view.Book.Title, m.view.Chapter.Title))
 	lines := m.paginator.VisibleLines(m.lineOffset)
-	body := bodyStyle.Width(m.contentWidth()).Render(strings.Join(lines, "\n"))
+	body := m.styles.body.Width(m.contentWidth()).Render(strings.Join(lines, "\n"))
 	page, total := m.paginator.PageInfo(m.lineOffset)
 	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | g jump | b bookmark | s save | q quit", page, total)
 	if m.jump.active {
@@ -231,7 +251,7 @@ func (m ReaderModel) View() string {
 	if m.err != nil {
 		statusText = m.err.Error() + " | " + statusText
 	}
-	status := statusStyle.Width(m.contentWidth()).Render(statusText)
+	status := m.styles.status.Width(m.contentWidth()).Render(statusText)
 	return lipgloss.JoinVertical(lipgloss.Left, title, body, status)
 }
 
@@ -254,8 +274,8 @@ func (m ReaderModel) contentWidth() int {
 	if width < 20 {
 		return 20
 	}
-	if width > 100 {
-		return 100
+	if width > m.options.MaxWidth {
+		return m.options.MaxWidth
 	}
 	return width
 }
@@ -464,11 +484,39 @@ func excerptFrom(content string, charOffset, length int) string {
 	return strings.TrimSpace(string(runes[charOffset:end]))
 }
 
-var (
-	titleStyle  = lipgloss.NewStyle().Bold(true).Padding(0, 1)
-	bodyStyle   = lipgloss.NewStyle().Padding(1, 2)
-	statusStyle = lipgloss.NewStyle().Reverse(true).Padding(0, 1)
-)
+func normalizeOptions(options ReaderOptions) ReaderOptions {
+	if options.MaxWidth <= 0 {
+		options.MaxWidth = 100
+	}
+	if options.MaxWidth < 20 {
+		options.MaxWidth = 20
+	}
+	switch options.Theme {
+	case "dark", "light":
+	default:
+		options.Theme = "default"
+	}
+	return options
+}
+
+func stylesForTheme(theme string) readerStyles {
+	styles := readerStyles{
+		title:  lipgloss.NewStyle().Bold(true).Padding(0, 1),
+		body:   lipgloss.NewStyle().Padding(1, 2),
+		status: lipgloss.NewStyle().Reverse(true).Padding(0, 1),
+	}
+	switch theme {
+	case "dark":
+		styles.title = styles.title.Foreground(lipgloss.Color("229"))
+		styles.body = styles.body.Foreground(lipgloss.Color("252"))
+		styles.status = styles.status.Background(lipgloss.Color("238")).Foreground(lipgloss.Color("229"))
+	case "light":
+		styles.title = styles.title.Foreground(lipgloss.Color("18"))
+		styles.body = styles.body.Foreground(lipgloss.Color("16"))
+		styles.status = styles.status.Background(lipgloss.Color("254")).Foreground(lipgloss.Color("18"))
+	}
+	return styles
+}
 
 var keys = struct {
 	quit        key.Binding
@@ -498,8 +546,12 @@ var keys = struct {
 	search:      key.NewBinding(key.WithKeys("/")),
 }
 
-func RunReader(store ProgressSaver, view app.ChapterView, startLineOffset int) error {
-	program := tea.NewProgram(NewReaderModel(store, view, startLineOffset), tea.WithAltScreen())
+func RunReader(store ProgressSaver, view app.ChapterView, startLineOffset int, options ...ReaderOptions) error {
+	readerOptions := ReaderOptions{}
+	if len(options) > 0 {
+		readerOptions = options[0]
+	}
+	program := tea.NewProgram(NewReaderModelWithOptions(store, view, startLineOffset, readerOptions), tea.WithAltScreen())
 	_, err := program.Run()
 	return err
 }

@@ -213,6 +213,7 @@ search.limit   positive integer
 ```
 
 `search.limit` is used as the default search result limit when `search --limit` is not provided.
+`reader.width` and `reader.theme` are used by the TUI reader.
 
 ### Bookmarks
 
