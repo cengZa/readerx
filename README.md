@@ -12,6 +12,11 @@ make build
 ./readerx chapters 1
 ./readerx read 1 --chapter 1
 ./readerx continue
+./readerx search "keyword"
+./readerx bookmark add 1
+./readerx bookmark list
+./readerx note add 1 --content "review this section"
+./readerx note list
 ```
 
 During development you can also use `go run` directly:
@@ -26,6 +31,8 @@ go run . continue
 go run . search "keyword"
 go run . bookmark add 1
 go run . bookmark list
+go run . note add 1 --content "review this section"
+go run . note list
 ```
 
 By default the SQLite database is stored at `~/.readerx/reader.db`. Use `--db <path>` to choose another database:
@@ -50,6 +57,7 @@ go run . read 1 --chapter 1 --plain
 - CLI bookshelf and chapter reading
 - Basic TUI reading with `j/k`, `Space`, `u`, `n/p`, `b`, `s`, and `q`
 - Bookmarks from CLI and TUI
+- Notes from CLI
 - Basic Chinese-friendly LIKE search
 
-EPUB, online sources, notes, and AI features are intentionally left for later phases.
+Online sources, note export, and AI features are intentionally left for later phases.

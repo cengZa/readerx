@@ -136,6 +136,33 @@ func TestSQLiteStoreSearchesChapters(t *testing.T) {
 	}
 }
 
+func TestSQLiteStoreManagesNotes(t *testing.T) {
+	store, bookID := seedBookWithChapters(t)
+	defer store.Close()
+
+	noteID, err := store.AddNote(domain.Note{BookID: bookID, ChapterNo: 1, LineOffset: 1, CharOffset: 2, Content: "笔记"})
+	if err != nil {
+		t.Fatalf("AddNote: %v", err)
+	}
+	notes, err := store.ListNotes(bookID)
+	if err != nil {
+		t.Fatalf("ListNotes: %v", err)
+	}
+	if len(notes) != 1 || notes[0].ID != noteID || notes[0].BookTitle != "剑来" || notes[0].ChapterTitle != "第一章" {
+		t.Fatalf("notes = %#v", notes)
+	}
+	if err := store.RemoveNote(noteID); err != nil {
+		t.Fatalf("RemoveNote: %v", err)
+	}
+	notes, err = store.ListNotes(bookID)
+	if err != nil {
+		t.Fatalf("ListNotes after remove: %v", err)
+	}
+	if len(notes) != 0 {
+		t.Fatalf("notes after remove = %#v, want empty", notes)
+	}
+}
+
 func seedBookWithChapters(t *testing.T) (*SQLiteStore, int64) {
 	t.Helper()
 	store, err := OpenSQLite(t.TempDir() + "/reader.db")

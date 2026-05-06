@@ -17,6 +17,9 @@ type Store interface {
 	AddBookmark(bookmark domain.Bookmark) (int64, error)
 	ListBookmarks(bookID int64) ([]domain.Bookmark, error)
 	RemoveBookmark(bookmarkID int64) error
+	AddNote(note domain.Note) (int64, error)
+	ListNotes(bookID int64) ([]domain.Note, error)
+	RemoveNote(noteID int64) error
 	SearchChapters(keyword string, bookID int64) ([]domain.SearchResult, error)
 	Close() error
 }

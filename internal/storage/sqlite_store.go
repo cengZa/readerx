@@ -314,6 +314,70 @@ func (s *SQLiteStore) RemoveBookmark(bookmarkID int64) error {
 	return nil
 }
 
+func (s *SQLiteStore) AddNote(note domain.Note) (int64, error) {
+	now := time.Now().Unix()
+	result, err := s.db.Exec(`
+INSERT INTO notes (book_id, chapter_no, line_offset, char_offset, content, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		note.BookID, note.ChapterNo, note.LineOffset, note.CharOffset, note.Content, now, now)
+	if err != nil {
+		return 0, fmt.Errorf("add note: %w", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("read note id: %w", err)
+	}
+	return id, nil
+}
+
+func (s *SQLiteStore) ListNotes(bookID int64) ([]domain.Note, error) {
+	query := `
+SELECT n.id, n.book_id, b.title, n.chapter_no, c.title, n.line_offset, n.char_offset, n.content, n.created_at, n.updated_at
+FROM notes n
+JOIN books b ON b.id = n.book_id
+LEFT JOIN chapters c ON c.book_id = n.book_id AND c.chapter_no = n.chapter_no`
+	args := []any{}
+	if bookID > 0 {
+		query += ` WHERE n.book_id = ?`
+		args = append(args, bookID)
+	}
+	query += ` ORDER BY n.updated_at DESC, n.id DESC`
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list notes: %w", err)
+	}
+	defer rows.Close()
+
+	var notes []domain.Note
+	for rows.Next() {
+		var note domain.Note
+		if err := rows.Scan(&note.ID, &note.BookID, &note.BookTitle, &note.ChapterNo, &note.ChapterTitle,
+			&note.LineOffset, &note.CharOffset, &note.Content, &note.CreatedAt, &note.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan note: %w", err)
+		}
+		notes = append(notes, note)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate notes: %w", err)
+	}
+	return notes, nil
+}
+
+func (s *SQLiteStore) RemoveNote(noteID int64) error {
+	result, err := s.db.Exec(`DELETE FROM notes WHERE id = ?`, noteID)
+	if err != nil {
+		return fmt.Errorf("remove note: %w", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read removed note count: %w", err)
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *SQLiteStore) SearchChapters(keyword string, bookID int64) ([]domain.SearchResult, error) {
 	keyword = strings.TrimSpace(keyword)
 	if keyword == "" {

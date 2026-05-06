@@ -53,6 +53,19 @@ type Bookmark struct {
 	CreatedAt    int64
 }
 
+type Note struct {
+	ID           int64
+	BookID       int64
+	BookTitle    string
+	ChapterNo    int
+	ChapterTitle string
+	LineOffset   int
+	CharOffset   int
+	Content      string
+	CreatedAt    int64
+	UpdatedAt    int64
+}
+
 type SearchResult struct {
 	BookID       int64
 	BookTitle    string
