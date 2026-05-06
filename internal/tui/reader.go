@@ -20,6 +20,7 @@ type ProgressSaver interface {
 	AddNote(note domain.Note) (int64, error)
 	GetChapter(bookID int64, chapterNo int) (domain.Chapter, error)
 	CountChapters(bookID int64) (int, error)
+	SearchChapters(keyword string, bookID int64, limit int) ([]domain.SearchResult, error)
 }
 
 type ReaderModel struct {
@@ -32,6 +33,7 @@ type ReaderModel struct {
 	err        error
 	jump       jumpState
 	note       noteState
+	search     searchState
 }
 
 type jumpState struct {
@@ -42,6 +44,14 @@ type jumpState struct {
 type noteState struct {
 	active bool
 	input  string
+}
+
+type searchState struct {
+	active      bool
+	input       string
+	showResults bool
+	results     []domain.SearchResult
+	selected    int
 }
 
 func NewReaderModel(store ProgressSaver, view app.ChapterView, startLineOffset int) ReaderModel {
@@ -73,6 +83,9 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.note.active {
 			return m.updateNote(msg), nil
 		}
+		if m.search.active {
+			return m.updateSearch(msg), nil
+		}
 		switch {
 		case key.Matches(msg, keys.quit):
 			m.save()
@@ -99,6 +112,9 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, keys.addNote):
 			m.note = noteState{active: true}
 			m.err = nil
+		case key.Matches(msg, keys.search):
+			m.search = searchState{active: true}
+			m.err = nil
 		}
 	}
 	return m, nil
@@ -119,6 +135,58 @@ func (m ReaderModel) updateJump(msg tea.KeyMsg) ReaderModel {
 			if r >= '0' && r <= '9' {
 				m.jump.input += string(r)
 			}
+		}
+	}
+	return m
+}
+
+func (m ReaderModel) updateSearch(msg tea.KeyMsg) ReaderModel {
+	if m.search.showResults {
+		return m.updateSearchResults(msg)
+	}
+	switch msg.Type {
+	case tea.KeyEsc, tea.KeyCtrlC:
+		m.search = searchState{}
+	case tea.KeyEnter:
+		m.commitSearch()
+	case tea.KeyBackspace:
+		if len(m.search.input) > 0 {
+			m.search.input = m.search.input[:len(m.search.input)-1]
+		}
+	case tea.KeySpace:
+		m.search.input += " "
+	case tea.KeyRunes:
+		m.search.input += string(msg.Runes)
+	}
+	return m
+}
+
+func (m ReaderModel) updateSearchResults(msg tea.KeyMsg) ReaderModel {
+	switch msg.Type {
+	case tea.KeyEsc, tea.KeyCtrlC:
+		m.search = searchState{}
+	case tea.KeyEnter:
+		m.jumpToSearchResult()
+	case tea.KeyRunes:
+		if len(msg.Runes) == 1 {
+			switch msg.Runes[0] {
+			case 'j':
+				if m.search.selected < len(m.search.results)-1 {
+					m.search.selected++
+				}
+			case 'k':
+				if m.search.selected > 0 {
+					m.search.selected--
+				}
+			}
+		}
+	case tea.KeyDown:
+		if m.search.selected < len(m.search.results)-1 {
+			m.search.selected++
+		}
+	case tea.KeyUp:
+		if m.search.selected > 0 {
+			m.search.selected--
 		}
 	}
 	return m
@@ -154,11 +222,26 @@ func (m ReaderModel) View() string {
 	if m.note.active {
 		statusText = fmt.Sprintf("Add note: %s", m.note.input)
 	}
+	if m.search.active {
+		statusText = fmt.Sprintf("Search: %s", m.search.input)
+		if m.search.showResults {
+			statusText = m.searchStatus()
+		}
+	}
 	if m.err != nil {
 		statusText = m.err.Error() + " | " + statusText
 	}
 	status := statusStyle.Width(m.contentWidth()).Render(statusText)
 	return lipgloss.JoinVertical(lipgloss.Left, title, body, status)
+}
+
+func (m ReaderModel) searchStatus() string {
+	if len(m.search.results) == 0 {
+		return fmt.Sprintf("No results for %q | Esc cancel", m.search.input)
+	}
+	result := m.search.results[m.search.selected]
+	return fmt.Sprintf("Result %d/%d | Enter jump | j/k select | %s ch.%d %s",
+		m.search.selected+1, len(m.search.results), result.BookTitle, result.ChapterNo, result.Snippet)
 }
 
 func (m *ReaderModel) repaginate() {
@@ -335,6 +418,34 @@ func (m *ReaderModel) commitNote() {
 	m.err = fmt.Errorf("note saved: %d", id)
 }
 
+func (m *ReaderModel) commitSearch() {
+	input := strings.TrimSpace(m.search.input)
+	if input == "" {
+		m.err = fmt.Errorf("search keyword required")
+		m.search = searchState{}
+		return
+	}
+	results, err := m.store.SearchChapters(input, m.view.Book.ID, 20)
+	if err != nil {
+		m.err = err
+		m.search = searchState{}
+		return
+	}
+	m.search.showResults = true
+	m.search.results = results
+	m.search.selected = 0
+	m.err = nil
+}
+
+func (m *ReaderModel) jumpToSearchResult() {
+	if len(m.search.results) == 0 {
+		return
+	}
+	result := m.search.results[m.search.selected]
+	m.search = searchState{}
+	m.jumpToChapter(result.ChapterNo)
+}
+
 func excerptFrom(content string, charOffset, length int) string {
 	runes := []rune(content)
 	if len(runes) == 0 {
@@ -371,6 +482,7 @@ var keys = struct {
 	prevChapter key.Binding
 	jumpChapter key.Binding
 	addNote     key.Binding
+	search      key.Binding
 }{
 	quit:        key.NewBinding(key.WithKeys("q", "ctrl+c")),
 	down:        key.NewBinding(key.WithKeys("j", "down")),
@@ -383,6 +495,7 @@ var keys = struct {
 	prevChapter: key.NewBinding(key.WithKeys("p")),
 	jumpChapter: key.NewBinding(key.WithKeys("g")),
 	addNote:     key.NewBinding(key.WithKeys("m")),
+	search:      key.NewBinding(key.WithKeys("/")),
 }
 
 func RunReader(store ProgressSaver, view app.ChapterView, startLineOffset int) error {

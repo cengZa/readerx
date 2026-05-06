@@ -169,6 +169,7 @@ u          previous page
 n          next chapter
 p          previous chapter
 g          jump to chapter
+/          search current book
 b          add bookmark
 m          add note
 s          save progress

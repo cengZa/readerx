@@ -123,6 +123,41 @@ func TestReaderModelAddsTypedNote(t *testing.T) {
 	}
 }
 
+func TestReaderModelSearchesAndJumpsToResult(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			1: {BookID: 1, ChapterNo: 1, Title: "第一章", Content: "内容一"},
+			2: {BookID: 1, ChapterNo: 2, Title: "第二章", Content: "一道剑气"},
+		},
+		chapterCount: 2,
+		searchResults: []domain.SearchResult{
+			{BookID: 1, BookTitle: "测试书", ChapterNo: 2, ChapterTitle: "第二章", Snippet: "一道剑气"},
+		},
+	}
+	model := NewReaderModel(store, app.ChapterView{Book: store.book, Chapter: store.chapters[1]}, 0)
+
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	search := updated.(ReaderModel)
+	if !search.search.active || search.search.showResults {
+		t.Fatalf("search input mode should be active: %#v", search.search)
+	}
+
+	updated, _ = search.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("剑气")})
+	search = updated.(ReaderModel)
+	updated, _ = search.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	results := updated.(ReaderModel)
+	if !results.search.showResults || len(results.search.results) != 1 {
+		t.Fatalf("search results mode = %#v", results.search)
+	}
+
+	updated, _ = results.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	jumped := updated.(ReaderModel)
+	if jumped.view.Chapter.ChapterNo != 2 {
+		t.Fatalf("chapter after search jump = %d, want 2", jumped.view.Chapter.ChapterNo)
+	}
+}
+
 func TestOverallPercentageIncludesChapterAndPage(t *testing.T) {
 	got := overallPercentage(2, 4, 2, 2)
 	if got != 37.5 {
@@ -131,11 +166,12 @@ func TestOverallPercentageIncludesChapterAndPage(t *testing.T) {
 }
 
 type fakeReaderStore struct {
-	book         domain.Book
-	chapters     map[int]domain.Chapter
-	chapterCount int
-	saved        domain.Progress
-	note         domain.Note
+	book          domain.Book
+	chapters      map[int]domain.Chapter
+	chapterCount  int
+	saved         domain.Progress
+	note          domain.Note
+	searchResults []domain.SearchResult
 }
 
 func (f *fakeReaderStore) SaveProgress(progress domain.Progress) error {
@@ -162,4 +198,8 @@ func (f *fakeReaderStore) GetChapter(bookID int64, chapterNo int) (domain.Chapte
 
 func (f *fakeReaderStore) CountChapters(bookID int64) (int, error) {
 	return f.chapterCount, nil
+}
+
+func (f *fakeReaderStore) SearchChapters(keyword string, bookID int64, limit int) ([]domain.SearchResult, error) {
+	return f.searchResults, nil
 }
