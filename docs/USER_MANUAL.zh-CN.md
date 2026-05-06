@@ -89,6 +89,32 @@ make build
 ./readerx --help
 ```
 
+安装为当前用户可全局使用的命令：
+
+```bash
+make install
+```
+
+默认安装到：
+
+```text
+~/.local/bin/readerx
+```
+
+确保 `~/.local/bin` 已经加入 `PATH`。如果你使用 zsh：
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+readerx --help
+```
+
+也可以安装到其他目录：
+
+```bash
+make install INSTALL_DIR=/usr/local/bin
+```
+
 ### 从 Release 安装
 
 从这里下载发布包：
@@ -104,10 +130,11 @@ chmod +x readerx
 ./readerx --help
 ```
 
-可选：安装到系统路径：
+把下载到的二进制安装为当前用户可全局使用的命令：
 
 ```bash
-sudo mv readerx /usr/local/bin/readerx
+mkdir -p ~/.local/bin
+cp readerx ~/.local/bin/readerx
 readerx --help
 ```
 

@@ -39,10 +39,30 @@ Use your own files:
 
 ## Install
 
-Build from source:
+Install from source into your user binary directory:
 
 ```bash
-make build
+make install
+```
+
+By default this installs:
+
+```text
+~/.local/bin/readerx
+```
+
+Make sure `~/.local/bin` is in your `PATH`. For zsh:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+readerx --help
+```
+
+Install somewhere else:
+
+```bash
+make install INSTALL_DIR=/usr/local/bin
 ```
 
 Download release archives:
@@ -58,10 +78,11 @@ chmod +x readerx
 ./readerx --help
 ```
 
-Optional system-wide install:
+Install the downloaded binary globally for your user:
 
 ```bash
-sudo mv readerx /usr/local/bin/readerx
+mkdir -p ~/.local/bin
+cp readerx ~/.local/bin/readerx
 readerx --help
 ```
 

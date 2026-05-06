@@ -87,6 +87,32 @@ Check:
 ./readerx --help
 ```
 
+Install globally for your user:
+
+```bash
+make install
+```
+
+By default this installs:
+
+```text
+~/.local/bin/readerx
+```
+
+Make sure `~/.local/bin` is in your `PATH`. For zsh:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+readerx --help
+```
+
+You can also install to another directory:
+
+```bash
+make install INSTALL_DIR=/usr/local/bin
+```
+
 ### Install From Release
 
 Download a release archive from:
@@ -102,10 +128,11 @@ chmod +x readerx
 ./readerx --help
 ```
 
-Optional system-wide install:
+Install the downloaded binary globally for your user:
 
 ```bash
-sudo mv readerx /usr/local/bin/readerx
+mkdir -p ~/.local/bin
+cp readerx ~/.local/bin/readerx
 readerx --help
 ```
 

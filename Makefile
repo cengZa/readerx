@@ -1,7 +1,20 @@
-.PHONY: build test clean
+INSTALL_DIR ?= $(HOME)/.local/bin
+
+.PHONY: build install uninstall test clean
 
 build:
 	go build -o readerx .
+
+install: build
+	mkdir -p "$(INSTALL_DIR)"
+	cp readerx "$(INSTALL_DIR)/readerx"
+	chmod +x "$(INSTALL_DIR)/readerx"
+	@echo "Installed readerx to $(INSTALL_DIR)/readerx"
+	@echo "Make sure $(INSTALL_DIR) is in your PATH."
+
+uninstall:
+	rm -f "$(INSTALL_DIR)/readerx"
+	@echo "Removed $(INSTALL_DIR)/readerx"
 
 test:
 	go test ./...
