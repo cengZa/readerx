@@ -1,61 +1,55 @@
 # ReaderX
 
-ReaderX is a local-first terminal reader for long-form text. It imports books into a local SQLite library, lets you read from the terminal, and keeps progress, bookmarks, notes, and search data on your machine.
+ReaderX is a local-first terminal reader for long-form text. It imports TXT and EPUB files into a local SQLite library, provides a terminal reading UI, and keeps reading progress, search data, bookmarks, and notes on your machine.
 
-The project is intentionally not a downloader or platform scraper. It is designed for local files you own or are allowed to read.
+ReaderX is not a downloader or scraper. It is designed for local files you own or are allowed to read.
 
-## Features
+## What It Can Do
 
 - Import UTF-8 TXT files
-- Import common spine-based EPUB files
+- Import common OPF/spine-based EPUB files
 - Parse chapters automatically
 - Create fallback pseudo chapters for TXT files without headings
-- Store books, chapters, progress, bookmarks, and notes in SQLite
-- List books and chapter tables of contents
-- Read in a Bubble Tea TUI
-- Continue from saved progress
-- Search imported content with simple SQLite `LIKE` matching
-- Add/list/remove bookmarks
-- Add/list/remove notes
+- Read books in a Bubble Tea TUI
+- Continue from saved reading progress
+- List books and chapters
+- Search imported books with a lightweight SQLite ngram index
+- Add, list, and remove bookmarks
+- Add, list, and remove notes
 - Export bookmarks and notes to Markdown
-- Run tests and builds in GitHub Actions CI
+- Configure reader width, theme, and default search limit
+- Build release archives through GitHub Actions
 
-## Requirements
+## Quick Start
 
-- Go 1.26 or newer
-- macOS or Linux terminal
+```bash
+make build
+./readerx --db ./reader.db import ./book.txt
+./readerx --db ./reader.db list
+./readerx --db ./reader.db chapters 1
+./readerx --db ./reader.db read 1
+```
 
-## Build
+Use your own files:
+
+```bash
+./readerx import /path/to/book.txt
+./readerx import /path/to/book.epub
+```
+
+## Install
+
+Build from source:
 
 ```bash
 make build
 ```
 
-This creates:
-
-```bash
-./readerx
-```
-
-Run tests:
-
-```bash
-make test
-```
-
-Clean local build/database artifacts:
-
-```bash
-make clean
-```
-
-## Install From Release
-
-Download a release archive from:
+Download release archives:
 
 <https://github.com/cengZa/readerx/releases>
 
-Choose the archive for your platform, then install the binary:
+After downloading:
 
 ```bash
 tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
@@ -71,194 +65,20 @@ sudo mv readerx /usr/local/bin/readerx
 readerx --help
 ```
 
-Releases are built automatically when a tag like `v0.1.0` is pushed.
+## User Manual
 
-## Quick Start
+Read the full manual here:
 
-Use the included sample book:
+[docs/USER_MANUAL.md](docs/USER_MANUAL.md)
 
-```bash
-make build
-./readerx --db ./reader.db import ./book.txt
-./readerx --db ./reader.db list
-./readerx --db ./reader.db chapters 1
-./readerx --db ./reader.db read 1
-```
-
-Use your own file:
-
-```bash
-./readerx import /path/to/book.txt
-./readerx import /path/to/book.epub
-```
-
-## Database
-
-By default, ReaderX stores data at:
-
-```text
-~/.readerx/reader.db
-```
-
-Use `--db` to choose another database:
-
-```bash
-./readerx --db ./reader.db list
-```
-
-`--db` is a global flag, so place it before the subcommand:
-
-```bash
-./readerx --db ./reader.db read 1
-```
-
-## Commands
-
-### Import
-
-```bash
-./readerx import ./book.txt
-./readerx import ./book.epub
-```
-
-### Bookshelf
-
-```bash
-./readerx list
-```
-
-### Chapters
-
-```bash
-./readerx chapters 1
-```
-
-### Read
-
-Open the TUI reader:
-
-```bash
-./readerx read 1
-```
-
-Open a specific chapter:
-
-```bash
-./readerx read 1 --chapter 2
-```
-
-Print plain text instead of opening the TUI:
-
-```bash
-./readerx read 1 --chapter 2 --plain
-```
-
-Continue the most recently read book:
-
-```bash
-./readerx continue
-./readerx continue --plain
-```
-
-### TUI Keys
-
-```text
-j / down   scroll down
-k / up     scroll up
-Space      next page
-u          previous page
-n          next chapter
-p          previous chapter
-g          jump to chapter
-/          search current book
-b          add bookmark
-m          add note
-s          save progress
-q          quit and save
-```
-
-### Search
-
-Search all books:
-
-```bash
-./readerx search "剑气"
-./readerx search "剑气" --limit 10
-```
-
-Search one book:
-
-```bash
-./readerx search "剑气" --book 1
-```
-
-Current search uses a lightweight SQLite ngram index to narrow candidate chapters, then verifies exact keyword matches and produces snippets. Very short one-character queries fall back to SQLite `LIKE`.
-
-### Config
-
-```bash
-./readerx config list
-./readerx config get search.limit
-./readerx config set search.limit 25
-./readerx config set reader.width 100
-./readerx config set reader.theme dark
-```
-
-Supported keys:
-
-```text
-reader.width   positive integer
-reader.theme   default, dark, light
-search.limit   positive integer
-```
-
-`search.limit` is used as the default search result limit when `search --limit` is not provided.
-`reader.width` and `reader.theme` are used by the TUI reader.
-
-### Bookmarks
-
-```bash
-./readerx bookmark add 1 --note "important moment"
-./readerx bookmark list
-./readerx bookmark list --book 1
-./readerx bookmark remove 1
-```
-
-You can also add a bookmark in the TUI by pressing `b`.
-
-### Notes
-
-```bash
-./readerx note add 1 --content "review this section"
-./readerx note list
-./readerx note list --book 1
-./readerx note remove 1
-```
-
-### Export
-
-Print Markdown:
-
-```bash
-./readerx export bookmarks --book 1
-./readerx export notes --book 1
-```
-
-Write Markdown to files:
-
-```bash
-./readerx export bookmarks --book 1 -o bookmarks.md
-./readerx export notes --book 1 -o notes.md
-```
+The manual covers every command, flag, TUI key, configuration value, and common workflow.
 
 ## Development
 
-Run without building:
+Run tests:
 
 ```bash
-go run . --db ./reader.db import ./book.txt
-go run . --db ./reader.db list
-go run . --db ./reader.db read 1 --plain
+make test
 ```
 
 Run the full validation suite:
@@ -268,14 +88,12 @@ go test ./...
 go build ./...
 ```
 
-Create a release tag:
+Run without building:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+go run . --db ./reader.db import ./book.txt
+go run . --db ./reader.db read 1 --plain
 ```
-
-GitHub Actions will run tests, build macOS/Linux archives, generate checksums, and publish the release.
 
 ## Architecture
 
@@ -291,7 +109,7 @@ internal/tui/           Terminal reader UI
 reader_cli_docs/        Product and architecture docs
 ```
 
-The CLI layer only parses command arguments and calls application services. Storage and parsing stay behind the application layer so the TUI does not talk directly to SQLite.
+The CLI layer parses arguments and calls application services. Storage and parsing stay behind the application layer so the TUI does not talk directly to SQLite.
 
 ## Current Limitations
 
@@ -299,14 +117,6 @@ The CLI layer only parses command arguments and calls application services. Stor
 - Search uses a lightweight ngram index, not a full tokenizer-based search engine.
 - Markdown export is available for bookmarks and notes, but full book export is not implemented yet.
 - Online sources and AI reading features are intentionally out of scope for the current version.
-
-## Roadmap
-
-- Add full book export
-- Add richer TUI bookmark/note panels
-- Harden EPUB compatibility with more fixtures
-- Add Homebrew installation
-- Explore optional AI summaries over local content
 
 ## Repository
 
