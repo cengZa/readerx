@@ -62,6 +62,14 @@ Incorrect:
 readerx read 1 --db ./reader.db
 ```
 
+To delete the default user database and start over:
+
+```bash
+make clean-user-data
+```
+
+This removes the default library at `~/.readerx/reader.db`, including imported books, progress, bookmarks, notes, and search indexes. `make clean` only removes project-local build and test files.
+
 ## 2. Installation
 
 ### Install From Source

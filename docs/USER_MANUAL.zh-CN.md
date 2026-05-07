@@ -64,6 +64,14 @@ readerx --db ./reader.db read 1
 readerx read 1 --db ./reader.db
 ```
 
+如果你想删除默认用户书库并重新开始：
+
+```bash
+make clean-user-data
+```
+
+这会删除默认书库 `~/.readerx/reader.db`，包括已导入书籍、阅读进度、书签、笔记和搜索索引。`make clean` 只清理项目内构建和测试文件。
+
 ## 2. 安装
 
 ### 从源码安装

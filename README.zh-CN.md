@@ -136,6 +136,14 @@ make clean
 
 这不会删除默认用户书库 `~/.readerx/reader.db`。
 
+如果你确实想删除默认用户书库，执行：
+
+```bash
+make clean-user-data
+```
+
+这会删除 `~/.readerx/reader.db` 以及 SQLite 伴随文件。默认书库里的已导入书籍、阅读进度、书签、笔记和搜索索引都会被删除。
+
 ## 架构
 
 ```text

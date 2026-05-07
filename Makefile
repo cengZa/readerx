@@ -1,6 +1,6 @@
 INSTALL_DIR ?= $(HOME)/.local/bin
 
-.PHONY: build install uninstall test clean
+.PHONY: build install uninstall test clean clean-user-data
 
 build:
 	go build -o readerx .
@@ -23,3 +23,7 @@ test:
 
 clean:
 	rm -f readerx reader.db reader.db-shm reader.db-wal
+
+clean-user-data:
+	rm -f "$(HOME)/.readerx/reader.db" "$(HOME)/.readerx/reader.db-shm" "$(HOME)/.readerx/reader.db-wal"
+	@echo "Removed ReaderX default user database from $(HOME)/.readerx"

@@ -136,6 +136,14 @@ make clean
 
 This does not remove your default user library at `~/.readerx/reader.db`.
 
+To remove the default user library, run:
+
+```bash
+make clean-user-data
+```
+
+This deletes `~/.readerx/reader.db` and its SQLite sidecar files. Imported books, reading progress, bookmarks, notes, and search indexes in the default library will be removed.
+
 ## Architecture
 
 ```text
