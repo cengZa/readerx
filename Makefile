@@ -7,8 +7,10 @@ build:
 
 install: build
 	mkdir -p "$(INSTALL_DIR)"
-	cp readerx "$(INSTALL_DIR)/readerx"
-	chmod +x "$(INSTALL_DIR)/readerx"
+	cp readerx "$(INSTALL_DIR)/readerx.tmp"
+	xattr -c "$(INSTALL_DIR)/readerx.tmp" 2>/dev/null || true
+	chmod +x "$(INSTALL_DIR)/readerx.tmp"
+	mv -f "$(INSTALL_DIR)/readerx.tmp" "$(INSTALL_DIR)/readerx"
 	@echo "Installed readerx to $(INSTALL_DIR)/readerx"
 	@echo "Make sure $(INSTALL_DIR) is in your PATH."
 
