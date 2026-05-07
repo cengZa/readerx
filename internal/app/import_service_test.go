@@ -38,6 +38,81 @@ func TestImportServiceImportsTXTIntoStore(t *testing.T) {
 	}
 }
 
+func TestImportServiceReturnsExistingBookWhenFileAlreadyImported(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	path := filepath.Join(t.TempDir(), "book.txt")
+	if err := os.WriteFile(path, []byte("第一章 开始\n内容一\n\n第二章 继续\n内容二"), 0o644); err != nil {
+		t.Fatalf("write txt: %v", err)
+	}
+
+	first, err := NewImportService(store).ImportFile(path)
+	if err != nil {
+		t.Fatalf("first ImportFile: %v", err)
+	}
+	second, err := NewImportService(store).ImportFile(path)
+	if err != nil {
+		t.Fatalf("second ImportFile: %v", err)
+	}
+	if second.BookID != first.BookID {
+		t.Fatalf("second book id = %d, want existing id %d", second.BookID, first.BookID)
+	}
+	if !second.Existing {
+		t.Fatalf("second result Existing = false, want true")
+	}
+	if second.ChapterCount != first.ChapterCount || second.WordCount != first.WordCount {
+		t.Fatalf("second result = %#v, want same chapter and word counts as %#v", second, first)
+	}
+
+	books, err := store.ListBooks()
+	if err != nil {
+		t.Fatalf("ListBooks: %v", err)
+	}
+	if len(books) != 1 {
+		t.Fatalf("book count = %d, want 1", len(books))
+	}
+}
+
+func TestImportServiceCanReplaceExistingBook(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	path := filepath.Join(t.TempDir(), "book.txt")
+	if err := os.WriteFile(path, []byte("第一章 开始\n内容一\n\n第二章 继续\n内容二"), 0o644); err != nil {
+		t.Fatalf("write txt: %v", err)
+	}
+
+	first, err := NewImportService(store).ImportFile(path)
+	if err != nil {
+		t.Fatalf("first ImportFile: %v", err)
+	}
+	replaced, err := NewImportService(store).ImportFileWithOptions(path, ImportOptions{Replace: true})
+	if err != nil {
+		t.Fatalf("replace ImportFile: %v", err)
+	}
+	if replaced.BookID != first.BookID {
+		t.Fatalf("replaced book id = %d, want same id %d", replaced.BookID, first.BookID)
+	}
+	if !replaced.Replaced {
+		t.Fatalf("replaced result Replaced = false, want true")
+	}
+
+	books, err := store.ListBooks()
+	if err != nil {
+		t.Fatalf("ListBooks: %v", err)
+	}
+	if len(books) != 1 {
+		t.Fatalf("book count = %d, want 1", len(books))
+	}
+}
+
 func TestReadServiceContinuePreservesSavedLineOffset(t *testing.T) {
 	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
 	if err != nil {

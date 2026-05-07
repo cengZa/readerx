@@ -190,6 +190,7 @@ Import a local TXT or EPUB file.
 
 ```bash
 readerx import <file>
+readerx import <file> --replace
 ```
 
 Examples:
@@ -197,6 +198,7 @@ Examples:
 ```bash
 readerx import ./book.txt
 readerx import ./book.epub
+readerx import ./book.epub --replace
 ```
 
 Output example:
@@ -213,7 +215,8 @@ Notes:
 
 - TXT must be UTF-8.
 - EPUB support targets common OPF/spine/XHTML books.
-- Duplicate imports of the same content are rejected by content hash.
+- Duplicate imports of the same content return the existing Book ID.
+- Use `--replace` to reparse an already imported file and replace its stored chapters. This resets progress, bookmarks, and notes for that book.
 
 ### 5.3 List Books
 

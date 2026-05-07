@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var importReplace bool
+
 var importCmd = &cobra.Command{
 	Use:   "import <file>",
 	Short: "Import a local text file",
@@ -18,9 +20,17 @@ var importCmd = &cobra.Command{
 		}
 		defer store.Close()
 
-		result, err := app.NewImportService(store).ImportFile(args[0])
+		result, err := app.NewImportService(store).ImportFileWithOptions(args[0], app.ImportOptions{Replace: importReplace})
 		if err != nil {
 			return err
+		}
+		if result.Replaced {
+			fmt.Fprintf(cmd.OutOrStdout(), "重新导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+			return nil
+		}
+		if result.Existing {
+			fmt.Fprintf(cmd.OutOrStdout(), "书籍已存在：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+			return nil
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
 		return nil
@@ -28,5 +38,6 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
+	importCmd.Flags().BoolVar(&importReplace, "replace", false, "replace an existing imported book with the same content")
 	rootCmd.AddCommand(importCmd)
 }

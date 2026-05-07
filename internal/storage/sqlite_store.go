@@ -76,6 +76,61 @@ func (s *SQLiteStore) InsertChapters(bookID int64, chapters []domain.Chapter) er
 	}
 	defer tx.Rollback()
 
+	if err := insertChaptersTx(tx, bookID, chapters); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit chapters: %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStore) ReplaceBook(bookID int64, book domain.Book, chapters []domain.Chapter) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin replace book: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().Unix()
+	result, err := tx.Exec(`
+UPDATE books
+SET source_type = ?, source_book_id = ?, title = ?, author = ?, description = ?, cover_url = ?, file_path = ?, content_hash = ?, updated_at = ?
+WHERE id = ?`,
+		defaultString(book.SourceType, "local"), book.SourceBookID, book.Title, book.Author, book.Description,
+		book.CoverURL, book.FilePath, book.ContentHash, now, bookID)
+	if err != nil {
+		return fmt.Errorf("update book: %w", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read replaced book count: %w", err)
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
+	if _, err := tx.Exec(`DELETE FROM reading_progress WHERE book_id = ?`, bookID); err != nil {
+		return fmt.Errorf("delete reading progress: %w", err)
+	}
+	if _, err := tx.Exec(`DELETE FROM bookmarks WHERE book_id = ?`, bookID); err != nil {
+		return fmt.Errorf("delete bookmarks: %w", err)
+	}
+	if _, err := tx.Exec(`DELETE FROM notes WHERE book_id = ?`, bookID); err != nil {
+		return fmt.Errorf("delete notes: %w", err)
+	}
+	if _, err := tx.Exec(`DELETE FROM chapters WHERE book_id = ?`, bookID); err != nil {
+		return fmt.Errorf("delete chapters: %w", err)
+	}
+	if err := insertChaptersTx(tx, bookID, chapters); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit replace book: %w", err)
+	}
+	return nil
+}
+
+func insertChaptersTx(tx *sql.Tx, bookID int64, chapters []domain.Chapter) error {
 	stmt, err := tx.Prepare(`
 INSERT INTO chapters (book_id, chapter_no, source_chapter_id, title, content, content_status, content_hash, word_count, created_at, updated_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -98,9 +153,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 		if err := insertChapterSearchTerms(tx, chapterID, chapter.Title+"\n"+chapter.Content); err != nil {
 			return fmt.Errorf("index chapter %d: %w", chapter.ChapterNo, err)
 		}
-	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit chapters: %w", err)
 	}
 	return nil
 }
@@ -146,6 +198,24 @@ FROM books WHERE id = ?`, bookID).Scan(&book.ID, &book.SourceType, &book.SourceB
 	}
 	if err != nil {
 		return domain.Book{}, fmt.Errorf("get book: %w", err)
+	}
+	return book, nil
+}
+
+func (s *SQLiteStore) GetBookByContentHash(contentHash string) (domain.Book, error) {
+	if strings.TrimSpace(contentHash) == "" {
+		return domain.Book{}, ErrNotFound
+	}
+	var book domain.Book
+	err := s.db.QueryRow(`
+SELECT id, source_type, source_book_id, title, author, description, cover_url, file_path, content_hash, created_at, updated_at, last_read_at
+FROM books WHERE content_hash = ?`, contentHash).Scan(&book.ID, &book.SourceType, &book.SourceBookID, &book.Title, &book.Author,
+		&book.Description, &book.CoverURL, &book.FilePath, &book.ContentHash, &book.CreatedAt, &book.UpdatedAt, &book.LastReadAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.Book{}, ErrNotFound
+	}
+	if err != nil {
+		return domain.Book{}, fmt.Errorf("get book by content hash: %w", err)
 	}
 	return book, nil
 }

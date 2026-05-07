@@ -192,6 +192,7 @@ readerx config --help
 
 ```bash
 readerx import <file>
+readerx import <file> --replace
 ```
 
 示例：
@@ -199,6 +200,7 @@ readerx import <file>
 ```bash
 readerx import ./book.txt
 readerx import ./book.epub
+readerx import ./book.epub --replace
 ```
 
 输出示例：
@@ -215,7 +217,8 @@ Book ID：1
 
 - TXT 需要是 UTF-8 编码。
 - EPUB 支持常见 OPF / spine / XHTML 结构。
-- 重复导入相同内容会被 content hash 拒绝，避免重复入库。
+- 重复导入相同内容会返回已有 Book ID，不会重复入库。
+- 如果想重新解析已经导入过的文件，使用 `--replace`。它会替换该书已有章节，并重置这本书的阅读进度、书签和笔记。
 
 ### 5.3 查看书架
 

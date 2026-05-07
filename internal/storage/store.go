@@ -5,8 +5,10 @@ import "github.com/heybox/readerx/internal/domain"
 type Store interface {
 	CreateBook(book domain.Book) (int64, error)
 	InsertChapters(bookID int64, chapters []domain.Chapter) error
+	ReplaceBook(bookID int64, book domain.Book, chapters []domain.Chapter) error
 	ListBooks() ([]domain.Book, error)
 	GetBook(bookID int64) (domain.Book, error)
+	GetBookByContentHash(contentHash string) (domain.Book, error)
 	ListChapters(bookID int64) ([]domain.Chapter, error)
 	GetChapter(bookID int64, chapterNo int) (domain.Chapter, error)
 	CountChapters(bookID int64) (int, error)
