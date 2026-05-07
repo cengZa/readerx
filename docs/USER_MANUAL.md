@@ -228,6 +228,7 @@ Notes:
 - EPUB support targets common OPF/spine/XHTML books.
 - Duplicate imports of the same content return the existing Book ID.
 - Use `--replace` to reparse an already imported file and replace its stored chapters. This resets progress, bookmarks, and notes for that book.
+- After import, ReaderX may print quality warnings for likely chapter numbering problems, such as duplicate chapter numbers, backwards numbering, or obvious skipped chapter numbers. These warnings do not modify imported content.
 
 ### 5.3 List Books
 

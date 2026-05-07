@@ -10,6 +10,7 @@ ReaderX is not a downloader or scraper. It is designed for local files you own o
 
 - Import UTF-8 TXT files
 - Import common OPF/spine-based EPUB files
+- Warn about likely chapter numbering problems after import
 - Parse chapters automatically
 - Create fallback pseudo chapters for TXT files without headings
 - Read books in a Bubble Tea TUI

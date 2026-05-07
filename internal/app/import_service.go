@@ -20,6 +20,7 @@ type ImportResult struct {
 	WordCount    int
 	Existing     bool
 	Replaced     bool
+	Warnings     []string
 }
 
 type ImportOptions struct {
@@ -42,12 +43,18 @@ func (s *ImportService) ImportFileWithOptions(path string, options ImportOptions
 	if len(chapters) == 0 {
 		return ImportResult{}, fmt.Errorf("no chapters parsed from %s", path)
 	}
+	warnings := ChapterQualityWarnings(chapters)
 	existing, err := s.store.GetBookByContentHash(book.ContentHash)
 	if err == nil {
 		if options.Replace {
-			return s.replaceExistingBook(existing.ID, book, chapters)
+			return s.replaceExistingBook(existing.ID, book, chapters, warnings)
 		}
-		return s.importResultForExistingBook(existing)
+		result, err := s.importResultForExistingBook(existing)
+		if err != nil {
+			return ImportResult{}, err
+		}
+		result.Warnings = warnings
+		return result, nil
 	}
 	if !errors.Is(err, storage.ErrNotFound) {
 		return ImportResult{}, err
@@ -63,10 +70,10 @@ func (s *ImportService) ImportFileWithOptions(path string, options ImportOptions
 	for _, chapter := range chapters {
 		totalWords += chapter.WordCount
 	}
-	return ImportResult{BookID: bookID, Title: book.Title, ChapterCount: len(chapters), WordCount: totalWords}, nil
+	return ImportResult{BookID: bookID, Title: book.Title, ChapterCount: len(chapters), WordCount: totalWords, Warnings: warnings}, nil
 }
 
-func (s *ImportService) replaceExistingBook(bookID int64, book domain.Book, chapters []domain.Chapter) (ImportResult, error) {
+func (s *ImportService) replaceExistingBook(bookID int64, book domain.Book, chapters []domain.Chapter, warnings []string) (ImportResult, error) {
 	if err := s.store.ReplaceBook(bookID, book, chapters); err != nil {
 		return ImportResult{}, err
 	}
@@ -74,7 +81,7 @@ func (s *ImportService) replaceExistingBook(bookID int64, book domain.Book, chap
 	for _, chapter := range chapters {
 		totalWords += chapter.WordCount
 	}
-	return ImportResult{BookID: bookID, Title: book.Title, ChapterCount: len(chapters), WordCount: totalWords, Replaced: true}, nil
+	return ImportResult{BookID: bookID, Title: book.Title, ChapterCount: len(chapters), WordCount: totalWords, Replaced: true, Warnings: warnings}, nil
 }
 
 func (s *ImportService) importResultForExistingBook(book domain.Book) (ImportResult, error) {

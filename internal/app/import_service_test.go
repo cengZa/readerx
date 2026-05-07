@@ -113,6 +113,41 @@ func TestImportServiceCanReplaceExistingBook(t *testing.T) {
 	}
 }
 
+func TestChapterQualityWarningsDetectNumberingProblems(t *testing.T) {
+	chapters := []domain.Chapter{
+		{ChapterNo: 1, Title: "第1章 开始"},
+		{ChapterNo: 2, Title: "第2章 继续"},
+		{ChapterNo: 3, Title: "第2章 重复"},
+		{ChapterNo: 4, Title: "第5章 跳号"},
+	}
+
+	warnings := ChapterQualityWarnings(chapters)
+	if len(warnings) != 3 {
+		t.Fatalf("warnings = %#v, want 3 warnings", warnings)
+	}
+	want := []string{
+		"章节编号可能重复：第2章出现2次。",
+		"章节编号顺序可能异常：第3个章节标题编号为2，前一个编号为2。",
+		"章节编号可能缺失：从第2章后跳到第5章。",
+	}
+	for i := range want {
+		if warnings[i] != want[i] {
+			t.Fatalf("warning[%d] = %q, want %q", i, warnings[i], want[i])
+		}
+	}
+}
+
+func TestChapterQualityWarningsIgnoreUnnumberedTitles(t *testing.T) {
+	chapters := []domain.Chapter{
+		{ChapterNo: 1, Title: "序"},
+		{ChapterNo: 2, Title: "尾声"},
+	}
+
+	if warnings := ChapterQualityWarnings(chapters); len(warnings) != 0 {
+		t.Fatalf("warnings = %#v, want none", warnings)
+	}
+}
+
 func TestReadServiceContinuePreservesSavedLineOffset(t *testing.T) {
 	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
 	if err != nil {

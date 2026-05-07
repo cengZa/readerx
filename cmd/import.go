@@ -26,15 +26,28 @@ var importCmd = &cobra.Command{
 		}
 		if result.Replaced {
 			fmt.Fprintf(cmd.OutOrStdout(), "重新导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+			printImportWarnings(cmd, result.Warnings)
 			return nil
 		}
 		if result.Existing {
 			fmt.Fprintf(cmd.OutOrStdout(), "书籍已存在：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+			printImportWarnings(cmd, result.Warnings)
 			return nil
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+		printImportWarnings(cmd, result.Warnings)
 		return nil
 	},
+}
+
+func printImportWarnings(cmd *cobra.Command, warnings []string) {
+	if len(warnings) == 0 {
+		return
+	}
+	fmt.Fprintln(cmd.OutOrStdout(), "\n导入质量提示：")
+	for _, warning := range warnings {
+		fmt.Fprintf(cmd.OutOrStdout(), "- %s\n", warning)
+	}
 }
 
 func init() {
