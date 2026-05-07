@@ -87,7 +87,10 @@ Install the downloaded binary globally for your user:
 
 ```bash
 mkdir -p ~/.local/bin
-cp readerx ~/.local/bin/readerx
+cp readerx ~/.local/bin/readerx.tmp
+xattr -c ~/.local/bin/readerx.tmp 2>/dev/null || true
+chmod +x ~/.local/bin/readerx.tmp
+mv -f ~/.local/bin/readerx.tmp ~/.local/bin/readerx
 readerx --help
 ```
 
@@ -124,6 +127,14 @@ Run without building:
 go run . --db ./reader.db import ./book.txt
 go run . --db ./reader.db read 1 --plain
 ```
+
+Clean project-local build and test artifacts:
+
+```bash
+make clean
+```
+
+This does not remove your default user library at `~/.readerx/reader.db`.
 
 ## Architecture
 

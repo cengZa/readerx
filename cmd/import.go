@@ -11,7 +11,7 @@ var importReplace bool
 
 var importCmd = &cobra.Command{
 	Use:   "import <file>",
-	Short: "Import a local text file",
+	Short: "Import a local TXT or EPUB file",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		store, err := openStore()

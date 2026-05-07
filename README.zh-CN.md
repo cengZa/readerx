@@ -87,7 +87,10 @@ chmod +x readerx
 
 ```bash
 mkdir -p ~/.local/bin
-cp readerx ~/.local/bin/readerx
+cp readerx ~/.local/bin/readerx.tmp
+xattr -c ~/.local/bin/readerx.tmp 2>/dev/null || true
+chmod +x ~/.local/bin/readerx.tmp
+mv -f ~/.local/bin/readerx.tmp ~/.local/bin/readerx
 readerx --help
 ```
 
@@ -124,6 +127,14 @@ go build ./...
 go run . --db ./reader.db import ./book.txt
 go run . --db ./reader.db read 1 --plain
 ```
+
+清理项目内构建和测试产物：
+
+```bash
+make clean
+```
+
+这不会删除默认用户书库 `~/.readerx/reader.db`。
 
 ## 架构
 
