@@ -245,7 +245,50 @@ ID  Title  Chapters  Progress  Last Read
 1   book   3         33%       2026-05-06
 ```
 
-### 5.4 List Chapters
+### 5.4 Book Info
+
+Show detailed metadata for one book.
+
+```bash
+readerx info <book-id>
+```
+
+Example:
+
+```bash
+readerx info 1
+```
+
+Output example:
+
+```text
+Book ID：1
+书名：book
+作者：-
+来源：local_txt
+文件：/path/to/book.txt
+章节数：3
+总字数：318
+最后阅读：-
+```
+
+### 5.5 Remove Book
+
+Remove one imported book from the library.
+
+```bash
+readerx remove <book-id>
+```
+
+Example:
+
+```bash
+readerx remove 1
+```
+
+This deletes the selected book, its chapters, reading progress, bookmarks, notes, and search index entries from the current database.
+
+### 5.6 List Chapters
 
 List chapter metadata for a book.
 
@@ -268,7 +311,7 @@ No  Title       Words
 3   第三章 白鹿渡口  105
 ```
 
-### 5.5 Read
+### 5.7 Read
 
 Open a book in the TUI reader.
 
@@ -303,7 +346,7 @@ Flags:
 --plain         print chapter without entering TUI
 ```
 
-### 5.6 Continue
+### 5.8 Continue
 
 Continue the most recently read book.
 
@@ -323,7 +366,7 @@ Flags:
 --plain   print chapter without entering TUI
 ```
 
-### 5.7 Search
+### 5.9 Search
 
 Search imported books.
 
@@ -360,7 +403,7 @@ Output example:
 ...一道剑气自山巅而起...
 ```
 
-### 5.8 Bookmarks
+### 5.10 Bookmarks
 
 #### Add Bookmark
 
@@ -398,7 +441,7 @@ Flags:
 readerx bookmark remove <bookmark-id>
 ```
 
-### 5.9 Notes
+### 5.11 Notes
 
 #### Add Note
 
@@ -435,7 +478,7 @@ Flags:
 readerx note remove <note-id>
 ```
 
-### 5.10 Export
+### 5.12 Export
 
 Export bookmarks or notes as Markdown.
 
@@ -476,7 +519,7 @@ Flags:
 -o, --output string   write Markdown to file
 ```
 
-### 5.11 Config
+### 5.13 Config
 
 List config:
 

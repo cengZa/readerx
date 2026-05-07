@@ -6,6 +6,7 @@ type Store interface {
 	CreateBook(book domain.Book) (int64, error)
 	InsertChapters(bookID int64, chapters []domain.Chapter) error
 	ReplaceBook(bookID int64, book domain.Book, chapters []domain.Chapter) error
+	DeleteBook(bookID int64) error
 	ListBooks() ([]domain.Book, error)
 	GetBook(bookID int64) (domain.Book, error)
 	GetBookByContentHash(contentHash string) (domain.Book, error)

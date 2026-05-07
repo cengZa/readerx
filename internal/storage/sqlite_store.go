@@ -130,6 +130,21 @@ WHERE id = ?`,
 	return nil
 }
 
+func (s *SQLiteStore) DeleteBook(bookID int64) error {
+	result, err := s.db.Exec(`DELETE FROM books WHERE id = ?`, bookID)
+	if err != nil {
+		return fmt.Errorf("delete book: %w", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read deleted book count: %w", err)
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func insertChaptersTx(tx *sql.Tx, bookID int64, chapters []domain.Chapter) error {
 	stmt, err := tx.Prepare(`
 INSERT INTO chapters (book_id, chapter_no, source_chapter_id, title, content, content_status, content_hash, word_count, created_at, updated_at)

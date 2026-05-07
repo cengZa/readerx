@@ -15,7 +15,7 @@ ReaderX is not a downloader or scraper. It is designed for local files you own o
 - Create fallback pseudo chapters for TXT files without headings
 - Read books in a Bubble Tea TUI
 - Continue from saved reading progress
-- List books and chapters
+- List books, inspect book details, remove books, and list chapters
 - Search imported books with a lightweight SQLite ngram index
 - Add, list, and remove bookmarks
 - Add, list, and remove notes

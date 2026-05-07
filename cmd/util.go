@@ -12,3 +12,10 @@ func parseIntArg(raw, name string) (int64, error) {
 	}
 	return value, nil
 }
+
+func emptyAsDash(value string) string {
+	if value == "" {
+		return "-"
+	}
+	return value
+}

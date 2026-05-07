@@ -247,7 +247,50 @@ ID  Title  Chapters  Progress  Last Read
 1   book   3         33%       2026-05-06
 ```
 
-### 5.4 查看章节目录
+### 5.4 查看书籍详情
+
+查看某本书的详细信息。
+
+```bash
+readerx info <book-id>
+```
+
+示例：
+
+```bash
+readerx info 1
+```
+
+输出示例：
+
+```text
+Book ID：1
+书名：book
+作者：-
+来源：local_txt
+文件：/path/to/book.txt
+章节数：3
+总字数：318
+最后阅读：-
+```
+
+### 5.5 删除书籍
+
+从当前书库中删除一本已导入书籍。
+
+```bash
+readerx remove <book-id>
+```
+
+示例：
+
+```bash
+readerx remove 1
+```
+
+这会从当前数据库中删除这本书、章节内容、阅读进度、书签、笔记和搜索索引。
+
+### 5.6 查看章节目录
 
 列出某本书的章节元数据。
 
@@ -270,7 +313,7 @@ No  Title       Words
 3   第三章 白鹿渡口  105
 ```
 
-### 5.5 阅读
+### 5.7 阅读
 
 打开 TUI 阅读器：
 
@@ -305,7 +348,7 @@ readerx read 1 --chapter 2 --plain
 --plain         不进入 TUI，直接输出章节正文
 ```
 
-### 5.6 继续阅读
+### 5.8 继续阅读
 
 继续最近阅读的书籍。
 
@@ -325,7 +368,7 @@ readerx continue --plain
 --plain   不进入 TUI，直接输出章节正文
 ```
 
-### 5.7 搜索
+### 5.9 搜索
 
 搜索已导入书籍。
 
@@ -362,7 +405,7 @@ readerx search "剑气" --limit 10
 ...一道剑气自山巅而起...
 ```
 
-### 5.8 书签
+### 5.10 书签
 
 #### 添加书签
 
@@ -400,7 +443,7 @@ readerx bookmark list --book <book-id>
 readerx bookmark remove <bookmark-id>
 ```
 
-### 5.9 笔记
+### 5.11 笔记
 
 #### 添加笔记
 
@@ -437,7 +480,7 @@ readerx note list --book <book-id>
 readerx note remove <note-id>
 ```
 
-### 5.10 导出
+### 5.12 导出
 
 把书签或笔记导出为 Markdown。
 
@@ -478,7 +521,7 @@ readerx export notes --book 1 -o notes.md
 -o, --output string   写入 Markdown 文件
 ```
 
-### 5.11 配置
+### 5.13 配置
 
 查看全部配置：
 

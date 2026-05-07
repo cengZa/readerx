@@ -201,6 +201,53 @@ func TestSQLiteStoreSearchLimit(t *testing.T) {
 	}
 }
 
+func TestSQLiteStoreDeleteBookCascadesReadingData(t *testing.T) {
+	store, bookID := seedBookWithChapters(t)
+	defer store.Close()
+
+	if err := store.SaveProgress(domain.Progress{BookID: bookID, ChapterNo: 1, LineOffset: 1, CharOffset: 2, Percentage: 50}); err != nil {
+		t.Fatalf("SaveProgress: %v", err)
+	}
+	if _, err := store.AddBookmark(domain.Bookmark{BookID: bookID, ChapterNo: 1, Excerpt: "摘录"}); err != nil {
+		t.Fatalf("AddBookmark: %v", err)
+	}
+	if _, err := store.AddNote(domain.Note{BookID: bookID, ChapterNo: 1, Content: "笔记"}); err != nil {
+		t.Fatalf("AddNote: %v", err)
+	}
+
+	if err := store.DeleteBook(bookID); err != nil {
+		t.Fatalf("DeleteBook: %v", err)
+	}
+	if _, err := store.GetBook(bookID); err != ErrNotFound {
+		t.Fatalf("GetBook after delete err = %v, want ErrNotFound", err)
+	}
+	if count, err := store.CountChapters(bookID); err != nil || count != 0 {
+		t.Fatalf("CountChapters after delete = %d, %v; want 0, nil", count, err)
+	}
+	if bookmarks, err := store.ListBookmarks(bookID); err != nil || len(bookmarks) != 0 {
+		t.Fatalf("ListBookmarks after delete = %#v, %v; want empty, nil", bookmarks, err)
+	}
+	if notes, err := store.ListNotes(bookID); err != nil || len(notes) != 0 {
+		t.Fatalf("ListNotes after delete = %#v, %v; want empty, nil", notes, err)
+	}
+	results, err := store.SearchChapters("第一段", 0, 10)
+	if err != nil {
+		t.Fatalf("SearchChapters after delete: %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("SearchChapters after delete = %#v, want empty", results)
+	}
+}
+
+func TestSQLiteStoreDeleteBookReturnsNotFound(t *testing.T) {
+	store, bookID := seedBookWithChapters(t)
+	defer store.Close()
+
+	if err := store.DeleteBook(bookID + 100); err != ErrNotFound {
+		t.Fatalf("DeleteBook err = %v, want ErrNotFound", err)
+	}
+}
+
 func TestSQLiteStoreManagesNotes(t *testing.T) {
 	store, bookID := seedBookWithChapters(t)
 	defer store.Close()
