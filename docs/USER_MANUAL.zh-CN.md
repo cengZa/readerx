@@ -248,6 +248,9 @@ Book ID：1
 
 ```bash
 readerx list
+readerx list --sort title
+readerx list --sort created
+readerx list --filter 剑
 ```
 
 输出示例：
@@ -255,6 +258,13 @@ readerx list
 ```text
 ID  Title  Chapters  Progress  Last Read
 1   book   3         33%       2026-05-06
+```
+
+参数：
+
+```text
+--sort string     recent、created 或 title
+--filter string   按书名筛选
 ```
 
 ### 5.5 查看书籍详情

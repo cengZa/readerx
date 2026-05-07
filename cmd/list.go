@@ -9,6 +9,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var listSort string
+var listFilter string
+
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List imported books",
@@ -19,7 +22,7 @@ var listCmd = &cobra.Command{
 		}
 		defer store.Close()
 
-		books, err := app.NewLibraryService(store).ListBooks()
+		books, err := app.NewLibraryService(store).ListBooksWithOptions(app.ListBooksOptions{Filter: listFilter, Sort: listSort})
 		if err != nil {
 			return err
 		}
@@ -42,5 +45,7 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
+	listCmd.Flags().StringVar(&listSort, "sort", "recent", "sort books by recent, created, or title")
+	listCmd.Flags().StringVar(&listFilter, "filter", "", "filter books by title")
 	rootCmd.AddCommand(listCmd)
 }

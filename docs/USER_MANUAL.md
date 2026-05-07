@@ -246,6 +246,9 @@ List imported books.
 
 ```bash
 readerx list
+readerx list --sort title
+readerx list --sort created
+readerx list --filter sword
 ```
 
 Output example:
@@ -253,6 +256,13 @@ Output example:
 ```text
 ID  Title  Chapters  Progress  Last Read
 1   book   3         33%       2026-05-06
+```
+
+Flags:
+
+```text
+--sort string     recent, created, or title
+--filter string   filter books by title
 ```
 
 ### 5.5 Book Info

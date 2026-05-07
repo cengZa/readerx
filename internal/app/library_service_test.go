@@ -39,6 +39,53 @@ func TestLibraryServiceRemoveBook(t *testing.T) {
 	}
 }
 
+func TestListBooksWithOptionsFiltersAndSortsByTitle(t *testing.T) {
+	books := []domain.Book{
+		{ID: 1, Title: "Beta", CreatedAt: 20},
+		{ID: 2, Title: "Alpha", CreatedAt: 10},
+		{ID: 3, Title: "Other", CreatedAt: 30},
+	}
+
+	got, err := filterAndSortBooks(books, ListBooksOptions{Filter: "a", Sort: "title"})
+	if err != nil {
+		t.Fatalf("filterAndSortBooks: %v", err)
+	}
+	if len(got) != 2 || got[0].Title != "Alpha" || got[1].Title != "Beta" {
+		t.Fatalf("books = %#v, want Alpha then Beta", got)
+	}
+}
+
+func TestListBooksWithOptionsSortsByCreatedAndRecent(t *testing.T) {
+	books := []domain.Book{
+		{ID: 1, Title: "A", CreatedAt: 20, LastReadAt: 5},
+		{ID: 2, Title: "B", CreatedAt: 30, LastReadAt: 0},
+		{ID: 3, Title: "C", CreatedAt: 10, LastReadAt: 50},
+	}
+
+	created, err := filterAndSortBooks(books, ListBooksOptions{Sort: "created"})
+	if err != nil {
+		t.Fatalf("created sort: %v", err)
+	}
+	if created[0].ID != 2 || created[1].ID != 1 || created[2].ID != 3 {
+		t.Fatalf("created order = %#v", created)
+	}
+
+	recent, err := filterAndSortBooks(books, ListBooksOptions{Sort: "recent"})
+	if err != nil {
+		t.Fatalf("recent sort: %v", err)
+	}
+	if recent[0].ID != 3 || recent[1].ID != 1 || recent[2].ID != 2 {
+		t.Fatalf("recent order = %#v", recent)
+	}
+}
+
+func TestListBooksWithOptionsRejectsUnknownSort(t *testing.T) {
+	_, err := filterAndSortBooks(nil, ListBooksOptions{Sort: "unknown"})
+	if err == nil {
+		t.Fatalf("expected error for unknown sort")
+	}
+}
+
 func seedLibraryBook(t *testing.T) (*storage.SQLiteStore, int64) {
 	t.Helper()
 	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
