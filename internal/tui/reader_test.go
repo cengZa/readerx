@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"regexp"
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -173,6 +175,40 @@ func TestReaderModelUsesConfiguredMaxWidth(t *testing.T) {
 	}
 }
 
+func TestReaderViewKeepsTitleBodyAndStatusInsideTerminalHeight(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			1: {BookID: 1, ChapterNo: 1, Title: "第一章", Content: strings.Join([]string{
+				"第一行",
+				"第二行",
+				"第三行",
+				"第四行",
+				"第五行",
+				"第六行",
+				"第七行",
+			}, "\n")},
+		},
+		chapterCount: 1,
+	}
+	model := NewReaderModel(store, app.ChapterView{Book: store.book, Chapter: store.chapters[1]}, 0)
+	model.width = 50
+	model.height = 8
+	model.repaginate()
+
+	view := stripANSI(model.View())
+	lines := strings.Split(view, "\n")
+	if len(lines) != model.height {
+		t.Fatalf("rendered line count = %d, want %d:\n%s", len(lines), model.height, view)
+	}
+	if !strings.Contains(lines[0], "《测试书》 第一章") {
+		t.Fatalf("first line should contain title, got %q", lines[0])
+	}
+	if !strings.Contains(lines[len(lines)-1], "Page 1/2") {
+		t.Fatalf("last line should contain status, got %q", lines[len(lines)-1])
+	}
+}
+
 func TestOverallPercentageIncludesChapterAndPage(t *testing.T) {
 	got := overallPercentage(2, 4, 2, 2)
 	if got != 37.5 {
@@ -217,4 +253,10 @@ func (f *fakeReaderStore) CountChapters(bookID int64) (int, error) {
 
 func (f *fakeReaderStore) SearchChapters(keyword string, bookID int64, limit int) ([]domain.SearchResult, error) {
 	return f.searchResults, nil
+}
+
+var ansiPattern = regexp.MustCompile(`\x1b\[[0-9;?]*[ -/]*[@-~]`)
+
+func stripANSI(value string) string {
+	return ansiPattern.ReplaceAllString(value, "")
 }

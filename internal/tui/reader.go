@@ -11,6 +11,7 @@ import (
 	"github.com/heybox/readerx/internal/app"
 	"github.com/heybox/readerx/internal/domain"
 	"github.com/heybox/readerx/internal/reader"
+	"github.com/mattn/go-runewidth"
 )
 
 type ProgressSaver interface {
@@ -231,9 +232,10 @@ func (m ReaderModel) updateNote(msg tea.KeyMsg) ReaderModel {
 }
 
 func (m ReaderModel) View() string {
-	title := m.styles.title.Render(fmt.Sprintf("《%s》 %s", m.view.Book.Title, m.view.Chapter.Title))
+	frameWidth := m.frameWidth()
+	title := m.styles.title.Render(fitDisplayWidth(fmt.Sprintf("《%s》 %s", m.view.Book.Title, m.view.Chapter.Title), frameWidth))
 	lines := m.paginator.VisibleLines(m.lineOffset)
-	body := m.styles.body.Width(m.contentWidth()).Render(strings.Join(lines, "\n"))
+	body := m.renderBody(lines)
 	page, total := m.paginator.PageInfo(m.lineOffset)
 	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | g jump | b bookmark | s save | q quit", page, total)
 	if m.jump.active {
@@ -251,8 +253,25 @@ func (m ReaderModel) View() string {
 	if m.err != nil {
 		statusText = m.err.Error() + " | " + statusText
 	}
-	status := m.styles.status.Width(m.contentWidth()).Render(statusText)
+	status := m.styles.status.Render(fitDisplayWidth(statusText, frameWidth))
 	return lipgloss.JoinVertical(lipgloss.Left, title, body, status)
+}
+
+func (m ReaderModel) renderBody(lines []string) string {
+	bodyLines := make([]string, 0, m.contentHeight())
+	for i := 0; i < m.contentHeight(); i++ {
+		line := ""
+		if i < len(lines) {
+			line = lines[i]
+		}
+		bodyLines = append(bodyLines, m.styles.body.Render(m.renderBodyLine(line)))
+	}
+	return strings.Join(bodyLines, "\n")
+}
+
+func (m ReaderModel) renderBodyLine(line string) string {
+	content := fitDisplayWidth(line, m.contentWidth())
+	return "  " + content + "  "
 }
 
 func (m ReaderModel) searchStatus() string {
@@ -280,10 +299,14 @@ func (m ReaderModel) contentWidth() int {
 	return width
 }
 
+func (m ReaderModel) frameWidth() int {
+	return m.contentWidth() + 4
+}
+
 func (m ReaderModel) contentHeight() int {
-	height := m.height - 4
-	if height < 5 {
-		return 5
+	height := m.height - 2
+	if height < 3 {
+		return 3
 	}
 	return height
 }
@@ -501,9 +524,9 @@ func normalizeOptions(options ReaderOptions) ReaderOptions {
 
 func stylesForTheme(theme string) readerStyles {
 	styles := readerStyles{
-		title:  lipgloss.NewStyle().Bold(true).Padding(0, 1),
-		body:   lipgloss.NewStyle().Padding(1, 2),
-		status: lipgloss.NewStyle().Reverse(true).Padding(0, 1),
+		title:  lipgloss.NewStyle().Bold(true),
+		body:   lipgloss.NewStyle(),
+		status: lipgloss.NewStyle().Reverse(true),
 	}
 	switch theme {
 	case "dark":
@@ -516,6 +539,16 @@ func stylesForTheme(theme string) readerStyles {
 		styles.status = styles.status.Background(lipgloss.Color("254")).Foreground(lipgloss.Color("18"))
 	}
 	return styles
+}
+
+func fitDisplayWidth(value string, width int) string {
+	if width < 1 {
+		return ""
+	}
+	if runewidth.StringWidth(value) > width {
+		value = runewidth.Truncate(value, width, "…")
+	}
+	return value + strings.Repeat(" ", width-runewidth.StringWidth(value))
 }
 
 var keys = struct {
