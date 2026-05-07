@@ -10,12 +10,13 @@ ReaderX is not a downloader or scraper. It is designed for local files you own o
 
 - Import UTF-8 TXT files
 - Import common OPF/spine-based EPUB files
+- Import directories containing TXT and EPUB files
 - Warn about likely chapter numbering problems after import
 - Parse chapters automatically
 - Create fallback pseudo chapters for TXT files without headings
 - Read books in a Bubble Tea TUI
 - Continue from saved reading progress
-- List books, inspect book details, remove books, and list chapters
+- List, sort, filter, inspect, and remove books with deletion confirmation
 - Search imported books with a lightweight SQLite ngram index
 - Add, list, and remove bookmarks
 - Add, list, and remove notes
@@ -39,6 +40,7 @@ Use your own files:
 ```bash
 readerx import /path/to/book.txt
 readerx import /path/to/book.epub
+readerx import /path/to/books/
 ```
 
 By default ReaderX stores its library at `~/.readerx/reader.db`; you do not need to pass `--db` for normal use.
@@ -167,6 +169,7 @@ The CLI layer parses arguments and calls application services. Storage and parsi
 - EPUB support covers common OPF/spine/XHTML books, not every EPUB edge case.
 - Search uses a lightweight ngram index, not a full tokenizer-based search engine.
 - Markdown export is available for bookmarks and notes, but full book export is not implemented yet.
+- Directory import is recursive but currently imports supported files sequentially without a progress bar.
 - Online sources and AI reading features are intentionally out of scope for the current version.
 
 ## Repository

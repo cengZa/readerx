@@ -1,5 +1,7 @@
 # 08. Codex / AI Coding Agent 任务拆分
 
+状态：本文档保留早期任务拆分作为历史参考。ReaderX 当前实现已覆盖 Task 1-11 的主要能力，并额外完成目录导入、书库管理、删除确认、版本命令、发布包和中英文用户手册。下一阶段任务以 [07_ROADMAP.md](07_ROADMAP.md) 为准。
+
 ## 使用原则
 
 不要一次让 Codex 生成整个项目。应该按阶段投喂，每次任务边界清晰、验收明确。
@@ -168,8 +170,8 @@
 请实现全文搜索。
 
 要求：
-1. 使用 SQLite FTS5。
-2. 导入章节时写入 FTS 表。
+1. 使用 SQLite ngram 辅助索引。
+2. 导入章节时写入搜索索引表。
 3. 支持 readerx search <keyword>。
 4. 支持 --book 限制某本书。
 5. 搜索结果展示：
@@ -212,6 +214,8 @@
 ```
 
 ## Task 12：实现 AI 摘要原型
+
+状态：暂不规划。ReaderX 当前重点是本地阅读体验、导入稳定性和数据维护能力。
 
 ```text
 请实现 readerx ai summarize <book-id> --chapter <n> 的原型。
