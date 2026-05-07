@@ -29,6 +29,7 @@ type ReaderModel struct {
 	view       app.ChapterView
 	paginator  reader.Paginator
 	lineOffset int
+	chapterCnt int
 	width      int
 	height     int
 	err        error
@@ -79,6 +80,7 @@ func NewReaderModelWithOptions(store ProgressSaver, view app.ChapterView, startL
 		store:      store,
 		view:       view,
 		lineOffset: startLineOffset,
+		chapterCnt: chapterCount(store, view.Book.ID),
 		width:      80,
 		height:     24,
 		options:    options,
@@ -253,7 +255,8 @@ func (m ReaderModel) View() string {
 	lines := m.paginator.VisibleLines(m.lineOffset)
 	body := m.renderBody(lines)
 	page, total := m.paginator.PageInfo(m.lineOffset)
-	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | ? help | q quit", page, total)
+	statusText := fmt.Sprintf("Ch %d/%d | %.0f%% | Page %d/%d | j/k scroll | Space/u page | n/p chapter | ? help | q quit",
+		m.view.Chapter.ChapterNo, m.chapterCount(), overallPercentage(m.view.Chapter.ChapterNo, m.chapterCount(), page, total), page, total)
 	if m.help {
 		body = m.renderBody(m.helpLines())
 		statusText = "ReaderX help | ?/Esc close | q quit"
@@ -352,6 +355,7 @@ func (m *ReaderModel) save() {
 		m.err = err
 		return
 	}
+	m.chapterCnt = chapterCount
 	err = m.store.SaveProgress(domain.Progress{
 		BookID:     m.view.Book.ID,
 		ChapterNo:  m.view.Chapter.ChapterNo,
@@ -554,6 +558,21 @@ func normalizeOptions(options ReaderOptions) ReaderOptions {
 		options.Theme = "default"
 	}
 	return options
+}
+
+func chapterCount(store ProgressSaver, bookID int64) int {
+	count, err := store.CountChapters(bookID)
+	if err != nil || count <= 0 {
+		return 1
+	}
+	return count
+}
+
+func (m ReaderModel) chapterCount() int {
+	if m.chapterCnt <= 0 {
+		return 1
+	}
+	return m.chapterCnt
 }
 
 func stylesForTheme(theme string) readerStyles {

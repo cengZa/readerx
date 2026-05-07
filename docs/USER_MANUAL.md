@@ -563,6 +563,8 @@ Open:
 readerx read 1
 ```
 
+The status bar shows the current chapter position, whole-book progress, current page, and available shortcut hints.
+
 Keys:
 
 ```text

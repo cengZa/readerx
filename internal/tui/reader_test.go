@@ -209,6 +209,30 @@ func TestReaderViewKeepsTitleBodyAndStatusInsideTerminalHeight(t *testing.T) {
 	}
 }
 
+func TestReaderStatusShowsChapterAndOverallProgress(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			2: {BookID: 1, ChapterNo: 2, Title: "第二章", Content: strings.Join([]string{"一", "二", "三", "四", "五", "六"}, "\n")},
+		},
+		chapterCount: 4,
+	}
+	model := NewReaderModel(store, app.ChapterView{Book: store.book, Chapter: store.chapters[2]}, 0)
+	model.width = 50
+	model.height = 7
+	model.repaginate()
+
+	view := stripANSI(model.View())
+	lines := strings.Split(view, "\n")
+	status := lines[len(lines)-1]
+	if !strings.Contains(status, "Ch 2/4") {
+		t.Fatalf("status = %q, want chapter position", status)
+	}
+	if !strings.Contains(status, "25%") {
+		t.Fatalf("status = %q, want overall progress percentage", status)
+	}
+}
+
 func TestReaderModelTogglesHelpView(t *testing.T) {
 	store := &fakeReaderStore{
 		book: domain.Book{ID: 1, Title: "测试书"},
