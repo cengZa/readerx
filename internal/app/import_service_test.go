@@ -113,6 +113,54 @@ func TestImportServiceCanReplaceExistingBook(t *testing.T) {
 	}
 }
 
+func TestImportServiceImportsDirectoryBooks(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "b.txt"), []byte("第一章 B\n内容"), 0o644); err != nil {
+		t.Fatalf("write b: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "a.txt"), []byte("第一章 A\n内容"), 0o644); err != nil {
+		t.Fatalf("write a: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ignored.md"), []byte("# ignored"), 0o644); err != nil {
+		t.Fatalf("write ignored: %v", err)
+	}
+
+	results, err := NewImportService(store).ImportPathWithOptions(dir, ImportOptions{})
+	if err != nil {
+		t.Fatalf("ImportPathWithOptions: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("result count = %d, want 2: %#v", len(results), results)
+	}
+	if results[0].Title != "a" || results[1].Title != "b" {
+		t.Fatalf("results = %#v, want deterministic title order a,b", results)
+	}
+}
+
+func TestImportServiceDirectoryRejectsNoSupportedFiles(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ignored.md"), []byte("# ignored"), 0o644); err != nil {
+		t.Fatalf("write ignored: %v", err)
+	}
+
+	_, err = NewImportService(store).ImportPathWithOptions(dir, ImportOptions{})
+	if err == nil {
+		t.Fatalf("expected error for directory without supported files")
+	}
+}
+
 func TestChapterQualityWarningsDetectNumberingProblems(t *testing.T) {
 	chapters := []domain.Chapter{
 		{ChapterNo: 1, Title: "第1章 开始"},

@@ -20,24 +20,58 @@ var importCmd = &cobra.Command{
 		}
 		defer store.Close()
 
-		result, err := app.NewImportService(store).ImportFileWithOptions(args[0], app.ImportOptions{Replace: importReplace})
+		results, err := app.NewImportService(store).ImportPathWithOptions(args[0], app.ImportOptions{Replace: importReplace})
 		if err != nil {
 			return err
 		}
-		if result.Replaced {
-			fmt.Fprintf(cmd.OutOrStdout(), "重新导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
-			printImportWarnings(cmd, result.Warnings)
+		if len(results) == 1 {
+			printImportResult(cmd, results[0])
 			return nil
 		}
-		if result.Existing {
-			fmt.Fprintf(cmd.OutOrStdout(), "书籍已存在：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
-			printImportWarnings(cmd, result.Warnings)
-			return nil
-		}
-		fmt.Fprintf(cmd.OutOrStdout(), "导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
-		printImportWarnings(cmd, result.Warnings)
+		printBatchImportResults(cmd, results)
 		return nil
 	},
+}
+
+func printImportResult(cmd *cobra.Command, result app.ImportResult) {
+	if result.Replaced {
+		fmt.Fprintf(cmd.OutOrStdout(), "重新导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+		printImportWarnings(cmd, result.Warnings)
+		return
+	}
+	if result.Existing {
+		fmt.Fprintf(cmd.OutOrStdout(), "书籍已存在：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+		printImportWarnings(cmd, result.Warnings)
+		return
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "导入成功：\n书名：%s\n章节数：%d\n总字数：%d\nBook ID：%d\n", result.Title, result.ChapterCount, result.WordCount, result.BookID)
+	printImportWarnings(cmd, result.Warnings)
+}
+
+func printBatchImportResults(cmd *cobra.Command, results []app.ImportResult) {
+	imported, existing, replaced := 0, 0, 0
+	for _, result := range results {
+		switch {
+		case result.Replaced:
+			replaced++
+		case result.Existing:
+			existing++
+		default:
+			imported++
+		}
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "批量导入完成：新增 %d，本已存在 %d，重新导入 %d，总计 %d\n", imported, existing, replaced, len(results))
+	for _, result := range results {
+		status := "新增"
+		if result.Existing {
+			status = "已存在"
+		}
+		if result.Replaced {
+			status = "重新导入"
+		}
+		fmt.Fprintf(cmd.OutOrStdout(), "- [%s] %s（Book ID：%d，章节数：%d，总字数：%d）\n", status, result.Title, result.BookID, result.ChapterCount, result.WordCount)
+		printImportWarnings(cmd, result.Warnings)
+	}
 }
 
 func printImportWarnings(cmd *cobra.Command, warnings []string) {

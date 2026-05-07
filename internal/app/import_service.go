@@ -3,6 +3,9 @@ package app
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
 
 	"github.com/heybox/readerx/internal/domain"
 	"github.com/heybox/readerx/internal/source"
@@ -73,6 +76,37 @@ func (s *ImportService) ImportFileWithOptions(path string, options ImportOptions
 	return ImportResult{BookID: bookID, Title: book.Title, ChapterCount: len(chapters), WordCount: totalWords, Warnings: warnings}, nil
 }
 
+func (s *ImportService) ImportPathWithOptions(path string, options ImportOptions) ([]ImportResult, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() {
+		result, err := s.ImportFileWithOptions(path, options)
+		if err != nil {
+			return nil, err
+		}
+		return []ImportResult{result}, nil
+	}
+
+	files, err := supportedFilesInDirectory(path)
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no supported TXT or EPUB files found in %s", path)
+	}
+	results := make([]ImportResult, 0, len(files))
+	for _, file := range files {
+		result, err := s.ImportFileWithOptions(file, options)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
 func (s *ImportService) replaceExistingBook(bookID int64, book domain.Book, chapters []domain.Chapter, warnings []string) (ImportResult, error) {
 	if err := s.store.ReplaceBook(bookID, book, chapters); err != nil {
 		return ImportResult{}, err
@@ -94,4 +128,25 @@ func (s *ImportService) importResultForExistingBook(book domain.Book) (ImportRes
 		totalWords += chapter.WordCount
 	}
 	return ImportResult{BookID: book.ID, Title: book.Title, ChapterCount: len(chapters), WordCount: totalWords, Existing: true}, nil
+}
+
+func supportedFilesInDirectory(root string) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if source.SupportedLocalFile(path) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(files)
+	return files, nil
 }

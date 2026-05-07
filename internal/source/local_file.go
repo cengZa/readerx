@@ -18,3 +18,12 @@ func ImportLocalFile(path string) (domain.Book, []domain.Chapter, error) {
 		return domain.Book{}, nil, fmt.Errorf("unsupported file type %q; supported: .txt, .epub", filepath.Ext(path))
 	}
 }
+
+func SupportedLocalFile(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".txt", ".epub":
+		return true
+	default:
+		return false
+	}
+}
