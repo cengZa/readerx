@@ -23,6 +23,31 @@ func TestLibraryServiceBookInfo(t *testing.T) {
 	}
 }
 
+func TestLibraryServiceBookInfoIncludesProgressBookmarksAndNotes(t *testing.T) {
+	store, bookID := seedLibraryBook(t)
+	defer store.Close()
+	if err := store.SaveProgress(domain.Progress{BookID: bookID, ChapterNo: 2, LineOffset: 3, Percentage: 50}); err != nil {
+		t.Fatalf("SaveProgress: %v", err)
+	}
+	if _, err := store.AddBookmark(domain.Bookmark{BookID: bookID, ChapterNo: 1, Excerpt: "摘录"}); err != nil {
+		t.Fatalf("AddBookmark: %v", err)
+	}
+	if _, err := store.AddNote(domain.Note{BookID: bookID, ChapterNo: 2, Content: "笔记"}); err != nil {
+		t.Fatalf("AddNote: %v", err)
+	}
+
+	info, err := NewLibraryService(store).BookInfo(bookID)
+	if err != nil {
+		t.Fatalf("BookInfo: %v", err)
+	}
+	if info.Progress.ChapterNo != 2 || info.Progress.Percentage != 50 {
+		t.Fatalf("progress = %#v, want saved progress", info.Progress)
+	}
+	if info.BookmarkCount != 1 || info.NoteCount != 1 {
+		t.Fatalf("bookmark/note count = %d/%d, want 1/1", info.BookmarkCount, info.NoteCount)
+	}
+}
+
 func TestLibraryServiceRemoveBook(t *testing.T) {
 	store, bookID := seedLibraryBook(t)
 	defer store.Close()

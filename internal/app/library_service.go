@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -14,9 +15,12 @@ type LibraryService struct {
 }
 
 type BookInfo struct {
-	Book         domain.Book
-	ChapterCount int
-	WordCount    int
+	Book          domain.Book
+	ChapterCount  int
+	WordCount     int
+	Progress      domain.Progress
+	BookmarkCount int
+	NoteCount     int
 }
 
 type ListBooksOptions struct {
@@ -53,7 +57,26 @@ func (s *LibraryService) BookInfo(bookID int64) (BookInfo, error) {
 	for _, chapter := range chapters {
 		wordCount += chapter.WordCount
 	}
-	return BookInfo{Book: book, ChapterCount: len(chapters), WordCount: wordCount}, nil
+	progress, err := s.store.GetProgress(bookID)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return BookInfo{}, err
+	}
+	bookmarks, err := s.store.ListBookmarks(bookID)
+	if err != nil {
+		return BookInfo{}, err
+	}
+	notes, err := s.store.ListNotes(bookID)
+	if err != nil {
+		return BookInfo{}, err
+	}
+	return BookInfo{
+		Book:          book,
+		ChapterCount:  len(chapters),
+		WordCount:     wordCount,
+		Progress:      progress,
+		BookmarkCount: len(bookmarks),
+		NoteCount:     len(notes),
+	}, nil
 }
 
 func (s *LibraryService) RemoveBook(bookID int64) (domain.Book, error) {
