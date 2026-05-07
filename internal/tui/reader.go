@@ -321,8 +321,8 @@ func (m ReaderModel) searchStatus() string {
 		return fmt.Sprintf("No results for %q | Esc cancel", m.search.input)
 	}
 	result := m.search.results[m.search.selected]
-	return fmt.Sprintf("Result %d/%d | Enter jump | j/k select | %s ch.%d %s",
-		m.search.selected+1, len(m.search.results), result.BookTitle, result.ChapterNo, result.Snippet)
+	return fmt.Sprintf("Result %d/%d | Enter jump | j/k select | %s ch.%d %s | %s",
+		m.search.selected+1, len(m.search.results), result.BookTitle, result.ChapterNo, result.ChapterTitle, cleanStatusSnippet(result.Snippet))
 }
 
 func readerStatusText(chapterNo, chapterCount int, percentage float64, page, total, width int) string {
@@ -335,6 +335,10 @@ func readerStatusText(chapterNo, chapterCount int, percentage float64, page, tot
 		return fmt.Sprintf("Ch %d/%d | %.0f%% | Page %d/%d | j/k scroll | Space/u page | n/p chapter | ? help | q quit",
 			chapterNo, chapterCount, percentage, page, total)
 	}
+}
+
+func cleanStatusSnippet(value string) string {
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func (m *ReaderModel) repaginate() {

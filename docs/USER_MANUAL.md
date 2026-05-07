@@ -617,6 +617,8 @@ Enter      jump to selected result
 Esc        cancel
 ```
 
+The result line includes the chapter title and a cleaned one-line snippet.
+
 ### Add Bookmark
 
 Press `b`.

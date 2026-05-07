@@ -160,6 +160,29 @@ func TestReaderModelSearchesAndJumpsToResult(t *testing.T) {
 	}
 }
 
+func TestSearchStatusShowsChapterTitleAndCleanSnippet(t *testing.T) {
+	model := ReaderModel{
+		search: searchState{
+			input:       "剑气",
+			showResults: true,
+			results: []domain.SearchResult{
+				{BookTitle: "测试书", ChapterNo: 2, ChapterTitle: "第二章 风起", Snippet: "一道\n剑气   从山巅而起"},
+			},
+		},
+	}
+
+	status := model.searchStatus()
+	if !strings.Contains(status, "第二章 风起") {
+		t.Fatalf("status = %q, want chapter title", status)
+	}
+	if strings.Contains(status, "\n") || strings.Contains(status, "   ") {
+		t.Fatalf("status = %q, want clean one-line snippet", status)
+	}
+	if !strings.Contains(status, "一道 剑气 从山巅而起") {
+		t.Fatalf("status = %q, want cleaned snippet", status)
+	}
+}
+
 func TestReaderModelUsesConfiguredMaxWidth(t *testing.T) {
 	store := &fakeReaderStore{
 		book: domain.Book{ID: 1, Title: "测试书"},
