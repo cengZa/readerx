@@ -301,15 +301,18 @@ Remove one imported book from the library.
 
 ```bash
 readerx remove <book-id>
+readerx remove <book-id> --yes
 ```
 
 Example:
 
 ```bash
-readerx remove 1
+readerx remove 1 --yes
 ```
 
 This deletes the selected book, its chapters, reading progress, bookmarks, notes, and search index entries from the current database.
+
+In an interactive terminal, ReaderX asks you to type the Book ID before deletion. In scripts or other non-interactive environments, pass `--yes`.
 
 ### 5.7 List Chapters
 

@@ -303,15 +303,18 @@ Book ID：1
 
 ```bash
 readerx remove <book-id>
+readerx remove <book-id> --yes
 ```
 
 示例：
 
 ```bash
-readerx remove 1
+readerx remove 1 --yes
 ```
 
 这会从当前数据库中删除这本书、章节内容、阅读进度、书签、笔记和搜索索引。
+
+在交互式终端中，ReaderX 会要求你输入 Book ID 进行确认。在脚本或其他非交互环境中，需要传 `--yes`。
 
 ### 5.7 查看章节目录
 
