@@ -233,6 +233,44 @@ func TestReaderStatusShowsChapterAndOverallProgress(t *testing.T) {
 	}
 }
 
+func TestReaderModelUsesArrowPageKeysAndHomeEnd(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			1: {BookID: 1, ChapterNo: 1, Title: "第一章", Content: strings.Join([]string{"一", "二", "三", "四", "五", "六", "七"}, "\n")},
+		},
+		chapterCount: 1,
+	}
+	model := NewReaderModel(store, app.ChapterView{Book: store.book, Chapter: store.chapters[1]}, 0)
+	model.width = 50
+	model.height = 5
+	model.repaginate()
+
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRight})
+	next := updated.(ReaderModel)
+	if next.lineOffset == 0 {
+		t.Fatalf("right arrow should move to next page")
+	}
+
+	updated, _ = next.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	prev := updated.(ReaderModel)
+	if prev.lineOffset != 0 {
+		t.Fatalf("left arrow line offset = %d, want 0", prev.lineOffset)
+	}
+
+	updated, _ = prev.Update(tea.KeyMsg{Type: tea.KeyEnd})
+	end := updated.(ReaderModel)
+	if end.lineOffset != end.paginator.LastPageOffset() {
+		t.Fatalf("end line offset = %d, want %d", end.lineOffset, end.paginator.LastPageOffset())
+	}
+
+	updated, _ = end.Update(tea.KeyMsg{Type: tea.KeyHome})
+	home := updated.(ReaderModel)
+	if home.lineOffset != 0 {
+		t.Fatalf("home line offset = %d, want 0", home.lineOffset)
+	}
+}
+
 func TestReaderModelTogglesHelpView(t *testing.T) {
 	store := &fakeReaderStore{
 		book: domain.Book{ID: 1, Title: "测试书"},

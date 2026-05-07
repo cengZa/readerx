@@ -568,19 +568,21 @@ The status bar shows the current chapter position, whole-book progress, current 
 Keys:
 
 ```text
-j / down   scroll down
-k / up     scroll up
-Space      next page
-u / PgUp   previous page
-n          next chapter
-p          previous chapter
-g          jump to chapter
-/          search current book
-b          add bookmark
-m          add note
-s          save progress
-?          show or hide help
-q          quit and save
+j / down       scroll down
+k / up         scroll up
+Space / Right  next page
+u / Left       previous page
+Home           chapter start
+End            chapter end
+n              next chapter
+p              previous chapter
+g              jump to chapter
+/              search current book
+b              add bookmark
+m              add note
+s              save progress
+?              show or hide help
+q              quit and save
 ```
 
 The in-app help view is also closed with Esc.

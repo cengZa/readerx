@@ -134,6 +134,10 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.lineOffset = m.paginator.NextPage(m.lineOffset)
 		case key.Matches(msg, keys.prevPage):
 			m.lineOffset = m.paginator.PrevPage(m.lineOffset)
+		case key.Matches(msg, keys.home):
+			m.lineOffset = 0
+		case key.Matches(msg, keys.end):
+			m.lineOffset = m.paginator.LastPageOffset()
 		case key.Matches(msg, keys.save):
 			m.save()
 		case key.Matches(msg, keys.bookmark):
@@ -285,7 +289,8 @@ func (m ReaderModel) helpLines() []string {
 		"ReaderX help",
 		"",
 		"j/down scroll down       k/up scroll up",
-		"Space/PgDn next page     u/PgUp previous page",
+		"Space/Right next page    u/Left previous page",
+		"Home chapter start       End chapter end",
 		"n next chapter           p previous chapter",
 		"g jump to chapter        / search",
 		"b bookmark               m note",
@@ -610,6 +615,8 @@ var keys = struct {
 	up          key.Binding
 	nextPage    key.Binding
 	prevPage    key.Binding
+	home        key.Binding
+	end         key.Binding
 	save        key.Binding
 	bookmark    key.Binding
 	nextChapter key.Binding
@@ -622,8 +629,10 @@ var keys = struct {
 	quit:        key.NewBinding(key.WithKeys("q", "ctrl+c")),
 	down:        key.NewBinding(key.WithKeys("j", "down")),
 	up:          key.NewBinding(key.WithKeys("k", "up")),
-	nextPage:    key.NewBinding(key.WithKeys(" ", "pgdown")),
-	prevPage:    key.NewBinding(key.WithKeys("u", "pgup")),
+	nextPage:    key.NewBinding(key.WithKeys(" ", "pgdown", "right")),
+	prevPage:    key.NewBinding(key.WithKeys("u", "pgup", "left")),
+	home:        key.NewBinding(key.WithKeys("home")),
+	end:         key.NewBinding(key.WithKeys("end")),
 	save:        key.NewBinding(key.WithKeys("s")),
 	bookmark:    key.NewBinding(key.WithKeys("b")),
 	nextChapter: key.NewBinding(key.WithKeys("n")),

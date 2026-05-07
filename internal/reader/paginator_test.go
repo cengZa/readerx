@@ -21,18 +21,39 @@ func TestPaginatorMovesByPageAndClamps(t *testing.T) {
 	if next := p.NextPage(0); next != 2 {
 		t.Fatalf("next page offset = %d, want 2", next)
 	}
-	if last := p.NextPage(2); last != 4 {
-		t.Fatalf("last page offset = %d, want 4", last)
+	if last := p.NextPage(2); last != 3 {
+		t.Fatalf("last page offset = %d, want 3", last)
 	}
-	if clamped := p.NextPage(4); clamped != 4 {
-		t.Fatalf("clamped next page offset = %d, want 4", clamped)
+	if clamped := p.NextPage(4); clamped != 3 {
+		t.Fatalf("clamped next page offset = %d, want 3", clamped)
 	}
-	page, total := p.PageInfo(4)
+	page, total := p.PageInfo(3)
 	if page != 3 || total != 3 {
 		t.Fatalf("page info at last page = %d/%d, want 3/3", page, total)
 	}
 	if prev := p.PrevPage(1); prev != 0 {
 		t.Fatalf("previous page offset = %d, want 0", prev)
+	}
+}
+
+func TestPaginatorNextPageUsesFinalPageStart(t *testing.T) {
+	p := NewPaginator("1\n2\n3\n4\n5\n6\n7", 20, 6)
+
+	offset := p.NextPage(0)
+	if offset != 1 {
+		t.Fatalf("next page offset = %d, want final page start 1", offset)
+	}
+	page, total := p.PageInfo(offset)
+	if page != 2 || total != 2 {
+		t.Fatalf("page info = %d/%d, want 2/2", page, total)
+	}
+}
+
+func TestPaginatorLastPageOffset(t *testing.T) {
+	p := NewPaginator("1\n2\n3\n4\n5\n6\n7\n8", 20, 3)
+
+	if got := p.LastPageOffset(); got != 5 {
+		t.Fatalf("last page offset = %d, want 5", got)
 	}
 }
 

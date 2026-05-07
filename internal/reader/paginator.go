@@ -47,7 +47,12 @@ func (p Paginator) PrevLine(lineOffset int) int {
 }
 
 func (p Paginator) NextPage(lineOffset int) int {
-	return p.ClampOffset(lineOffset + p.pageHeight)
+	next := lineOffset + p.pageHeight
+	lastPageOffset := p.LastPageOffset()
+	if next >= lastPageOffset {
+		return lastPageOffset
+	}
+	return p.ClampOffset(next)
 }
 
 func (p Paginator) PrevPage(lineOffset int) int {
@@ -68,6 +73,14 @@ func (p Paginator) ClampOffset(lineOffset int) int {
 	return lineOffset
 }
 
+func (p Paginator) LastPageOffset() int {
+	offset := len(p.lines) - p.pageHeight
+	if offset < 0 {
+		return 0
+	}
+	return offset
+}
+
 func (p Paginator) CharOffsetForLine(lineOffset int) int {
 	lineOffset = p.ClampOffset(lineOffset)
 	if lineOffset >= len(p.lineStarts) {
@@ -80,8 +93,12 @@ func (p Paginator) PageInfo(lineOffset int) (int, int) {
 	if len(p.lines) == 0 {
 		return 1, 1
 	}
-	page := p.ClampOffset(lineOffset)/p.pageHeight + 1
 	total := (len(p.lines) + p.pageHeight - 1) / p.pageHeight
+	lineOffset = p.ClampOffset(lineOffset)
+	if total > 1 && lineOffset >= p.LastPageOffset() {
+		return total, total
+	}
+	page := lineOffset/p.pageHeight + 1
 	return page, total
 }
 
