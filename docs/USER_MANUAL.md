@@ -195,7 +195,17 @@ readerx bookmark --help
 readerx config --help
 ```
 
-### 5.2 Import
+### 5.2 Version
+
+Show installed version and build metadata.
+
+```bash
+readerx version
+```
+
+Source builds show `dev` and `unknown` build metadata by default. Release archives show the release tag, commit SHA, and build time.
+
+### 5.3 Import
 
 Import a local TXT or EPUB file.
 
@@ -230,7 +240,7 @@ Notes:
 - Use `--replace` to reparse an already imported file and replace its stored chapters. This resets progress, bookmarks, and notes for that book.
 - After import, ReaderX may print quality warnings for likely chapter numbering problems, such as duplicate chapter numbers, backwards numbering, or obvious skipped chapter numbers. These warnings do not modify imported content.
 
-### 5.3 List Books
+### 5.4 List Books
 
 List imported books.
 
@@ -245,7 +255,7 @@ ID  Title  Chapters  Progress  Last Read
 1   book   3         33%       2026-05-06
 ```
 
-### 5.4 Book Info
+### 5.5 Book Info
 
 Show detailed metadata for one book.
 
@@ -272,7 +282,7 @@ Book ID：1
 最后阅读：-
 ```
 
-### 5.5 Remove Book
+### 5.6 Remove Book
 
 Remove one imported book from the library.
 
@@ -288,7 +298,7 @@ readerx remove 1
 
 This deletes the selected book, its chapters, reading progress, bookmarks, notes, and search index entries from the current database.
 
-### 5.6 List Chapters
+### 5.7 List Chapters
 
 List chapter metadata for a book.
 
@@ -311,7 +321,7 @@ No  Title       Words
 3   第三章 白鹿渡口  105
 ```
 
-### 5.7 Read
+### 5.8 Read
 
 Open a book in the TUI reader.
 
@@ -346,7 +356,7 @@ Flags:
 --plain         print chapter without entering TUI
 ```
 
-### 5.8 Continue
+### 5.9 Continue
 
 Continue the most recently read book.
 
@@ -366,7 +376,7 @@ Flags:
 --plain   print chapter without entering TUI
 ```
 
-### 5.9 Search
+### 5.10 Search
 
 Search imported books.
 
@@ -403,7 +413,7 @@ Output example:
 ...一道剑气自山巅而起...
 ```
 
-### 5.10 Bookmarks
+### 5.11 Bookmarks
 
 #### Add Bookmark
 
@@ -441,7 +451,7 @@ Flags:
 readerx bookmark remove <bookmark-id>
 ```
 
-### 5.11 Notes
+### 5.12 Notes
 
 #### Add Note
 
@@ -478,7 +488,7 @@ Flags:
 readerx note remove <note-id>
 ```
 
-### 5.12 Export
+### 5.13 Export
 
 Export bookmarks or notes as Markdown.
 
@@ -519,7 +529,7 @@ Flags:
 -o, --output string   write Markdown to file
 ```
 
-### 5.13 Config
+### 5.14 Config
 
 List config:
 

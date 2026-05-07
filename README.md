@@ -21,6 +21,7 @@ ReaderX is not a downloader or scraper. It is designed for local files you own o
 - Add, list, and remove notes
 - Export bookmarks and notes to Markdown
 - Configure reader width, theme, and default search limit
+- Show installed version and release build metadata
 - Build release archives through GitHub Actions
 
 ## Quick Start

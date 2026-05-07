@@ -40,7 +40,9 @@ jobs:
             read -r goos goarch <<< "$target"
             name="readerx_${GITHUB_REF_NAME}_${goos}_${goarch}"
             mkdir -p "dist/${name}"
-            GOOS="${goos}" GOARCH="${goarch}" CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "dist/${name}/readerx" .
+            build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            ldflags="-s -w -X github.com/heybox/readerx/internal/version.Version=${GITHUB_REF_NAME} -X github.com/heybox/readerx/internal/version.Commit=${GITHUB_SHA} -X github.com/heybox/readerx/internal/version.Date=${build_date}"
+            GOOS="${goos}" GOARCH="${goarch}" CGO_ENABLED=0 go build -trimpath -ldflags="${ldflags}" -o "dist/${name}/readerx" .
             cp README.md LICENSE "dist/${name}/" 2>/dev/null || cp README.md "dist/${name}/"
             tar -C dist -czf "dist/${name}.tar.gz" "${name}"
             rm -rf "dist/${name}"

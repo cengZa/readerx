@@ -197,7 +197,17 @@ readerx bookmark --help
 readerx config --help
 ```
 
-### 5.2 导入书籍
+### 5.2 查看版本
+
+查看已安装版本和构建信息。
+
+```bash
+readerx version
+```
+
+源码构建默认显示 `dev` 和 `unknown` 构建信息。Release 发布包会显示发布标签、提交 SHA 和构建时间。
+
+### 5.3 导入书籍
 
 导入本地 TXT 或 EPUB 文件。
 
@@ -232,7 +242,7 @@ Book ID：1
 - 如果想重新解析已经导入过的文件，使用 `--replace`。它会替换该书已有章节，并重置这本书的阅读进度、书签和笔记。
 - 导入后 ReaderX 可能输出质量提示，用来指出疑似重复章节号、章节号回退或明显跳号等问题。这些提示不会修改已导入内容。
 
-### 5.3 查看书架
+### 5.4 查看书架
 
 列出已导入书籍。
 
@@ -247,7 +257,7 @@ ID  Title  Chapters  Progress  Last Read
 1   book   3         33%       2026-05-06
 ```
 
-### 5.4 查看书籍详情
+### 5.5 查看书籍详情
 
 查看某本书的详细信息。
 
@@ -274,7 +284,7 @@ Book ID：1
 最后阅读：-
 ```
 
-### 5.5 删除书籍
+### 5.6 删除书籍
 
 从当前书库中删除一本已导入书籍。
 
@@ -290,7 +300,7 @@ readerx remove 1
 
 这会从当前数据库中删除这本书、章节内容、阅读进度、书签、笔记和搜索索引。
 
-### 5.6 查看章节目录
+### 5.7 查看章节目录
 
 列出某本书的章节元数据。
 
@@ -313,7 +323,7 @@ No  Title       Words
 3   第三章 白鹿渡口  105
 ```
 
-### 5.7 阅读
+### 5.8 阅读
 
 打开 TUI 阅读器：
 
@@ -348,7 +358,7 @@ readerx read 1 --chapter 2 --plain
 --plain         不进入 TUI，直接输出章节正文
 ```
 
-### 5.8 继续阅读
+### 5.9 继续阅读
 
 继续最近阅读的书籍。
 
@@ -368,7 +378,7 @@ readerx continue --plain
 --plain   不进入 TUI，直接输出章节正文
 ```
 
-### 5.9 搜索
+### 5.10 搜索
 
 搜索已导入书籍。
 
@@ -405,7 +415,7 @@ readerx search "剑气" --limit 10
 ...一道剑气自山巅而起...
 ```
 
-### 5.10 书签
+### 5.11 书签
 
 #### 添加书签
 
@@ -443,7 +453,7 @@ readerx bookmark list --book <book-id>
 readerx bookmark remove <bookmark-id>
 ```
 
-### 5.11 笔记
+### 5.12 笔记
 
 #### 添加笔记
 
@@ -480,7 +490,7 @@ readerx note list --book <book-id>
 readerx note remove <note-id>
 ```
 
-### 5.12 导出
+### 5.13 导出
 
 把书签或笔记导出为 Markdown。
 
@@ -521,7 +531,7 @@ readerx export notes --book 1 -o notes.md
 -o, --output string   写入 Markdown 文件
 ```
 
-### 5.13 配置
+### 5.14 配置
 
 查看全部配置：
 
