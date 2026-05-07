@@ -32,6 +32,7 @@ type ReaderModel struct {
 	width      int
 	height     int
 	err        error
+	help       bool
 	jump       jumpState
 	note       noteState
 	search     searchState
@@ -98,6 +99,18 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.repaginate()
 	case tea.KeyMsg:
+		if m.help {
+			switch {
+			case key.Matches(msg, keys.quit):
+				m.save()
+				return m, tea.Quit
+			case key.Matches(msg, keys.help):
+				m.help = false
+			case msg.Type == tea.KeyEsc:
+				m.help = false
+			}
+			return m, nil
+		}
 		if m.jump.active {
 			return m.updateJump(msg), nil
 		}
@@ -135,6 +148,9 @@ func (m ReaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = nil
 		case key.Matches(msg, keys.search):
 			m.search = searchState{active: true}
+			m.err = nil
+		case key.Matches(msg, keys.help):
+			m.help = true
 			m.err = nil
 		}
 	}
@@ -237,7 +253,11 @@ func (m ReaderModel) View() string {
 	lines := m.paginator.VisibleLines(m.lineOffset)
 	body := m.renderBody(lines)
 	page, total := m.paginator.PageInfo(m.lineOffset)
-	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | g jump | b bookmark | s save | q quit", page, total)
+	statusText := fmt.Sprintf("Page %d/%d | j/k scroll | Space/u page | n/p chapter | ? help | q quit", page, total)
+	if m.help {
+		body = m.renderBody(m.helpLines())
+		statusText = "ReaderX help | ?/Esc close | q quit"
+	}
 	if m.jump.active {
 		statusText = fmt.Sprintf("Go to chapter: %s", m.jump.input)
 	}
@@ -255,6 +275,20 @@ func (m ReaderModel) View() string {
 	}
 	status := m.styles.status.Render(fitDisplayWidth(statusText, frameWidth))
 	return lipgloss.JoinVertical(lipgloss.Left, title, body, status)
+}
+
+func (m ReaderModel) helpLines() []string {
+	return []string{
+		"ReaderX help",
+		"",
+		"j/down scroll down       k/up scroll up",
+		"Space/PgDn next page     u/PgUp previous page",
+		"n next chapter           p previous chapter",
+		"g jump to chapter        / search",
+		"b bookmark               m note",
+		"s save progress          q quit",
+		"? or Esc close help",
+	}
 }
 
 func (m ReaderModel) renderBody(lines []string) string {
@@ -564,6 +598,7 @@ var keys = struct {
 	jumpChapter key.Binding
 	addNote     key.Binding
 	search      key.Binding
+	help        key.Binding
 }{
 	quit:        key.NewBinding(key.WithKeys("q", "ctrl+c")),
 	down:        key.NewBinding(key.WithKeys("j", "down")),
@@ -577,6 +612,7 @@ var keys = struct {
 	jumpChapter: key.NewBinding(key.WithKeys("g")),
 	addNote:     key.NewBinding(key.WithKeys("m")),
 	search:      key.NewBinding(key.WithKeys("/")),
+	help:        key.NewBinding(key.WithKeys("?")),
 }
 
 func RunReader(store ProgressSaver, view app.ChapterView, startLineOffset int, options ...ReaderOptions) error {

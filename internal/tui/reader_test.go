@@ -209,6 +209,33 @@ func TestReaderViewKeepsTitleBodyAndStatusInsideTerminalHeight(t *testing.T) {
 	}
 }
 
+func TestReaderModelTogglesHelpView(t *testing.T) {
+	store := &fakeReaderStore{
+		book: domain.Book{ID: 1, Title: "测试书"},
+		chapters: map[int]domain.Chapter{
+			1: {BookID: 1, ChapterNo: 1, Title: "第一章", Content: "正文"},
+		},
+		chapterCount: 1,
+	}
+	model := NewReaderModel(store, app.ChapterView{Book: store.book, Chapter: store.chapters[1]}, 0)
+
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	help := updated.(ReaderModel)
+	if !help.help {
+		t.Fatalf("help should be active")
+	}
+	view := stripANSI(help.View())
+	if !strings.Contains(view, "ReaderX help") || !strings.Contains(view, "/ search") {
+		t.Fatalf("help view missing expected shortcuts:\n%s", view)
+	}
+
+	updated, _ = help.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	closed := updated.(ReaderModel)
+	if closed.help {
+		t.Fatalf("help should close on esc")
+	}
+}
+
 func TestOverallPercentageIncludesChapterAndPage(t *testing.T) {
 	got := overallPercentage(2, 4, 2, 2)
 	if got != 37.5 {

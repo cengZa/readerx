@@ -569,7 +569,7 @@ Keys:
 j / down   scroll down
 k / up     scroll up
 Space      next page
-u          previous page
+u / PgUp   previous page
 n          next chapter
 p          previous chapter
 g          jump to chapter
@@ -577,8 +577,11 @@ g          jump to chapter
 b          add bookmark
 m          add note
 s          save progress
+?          show or hide help
 q          quit and save
 ```
+
+The in-app help view is also closed with Esc.
 
 ### Jump to Chapter
 
