@@ -204,7 +204,7 @@ func TestReaderViewKeepsTitleBodyAndStatusInsideTerminalHeight(t *testing.T) {
 	if !strings.Contains(lines[0], "《测试书》 第一章") {
 		t.Fatalf("first line should contain title, got %q", lines[0])
 	}
-	if !strings.Contains(lines[len(lines)-1], "Page 1/2") {
+	if !strings.Contains(lines[len(lines)-1], "Pg 1/2") {
 		t.Fatalf("last line should contain status, got %q", lines[len(lines)-1])
 	}
 }
@@ -230,6 +230,18 @@ func TestReaderStatusShowsChapterAndOverallProgress(t *testing.T) {
 	}
 	if !strings.Contains(status, "25%") {
 		t.Fatalf("status = %q, want overall progress percentage", status)
+	}
+}
+
+func TestReaderStatusKeepsEssentialInfoOnNarrowWidth(t *testing.T) {
+	got := readerStatusText(2, 4, 25, 3, 8, 30)
+	for _, want := range []string{"Ch2/4", "25%", "Pg3/8", "?", "q"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("compact status = %q, want to contain %q", got, want)
+		}
+	}
+	if strings.Contains(got, "scroll") || strings.Contains(got, "chapter") {
+		t.Fatalf("compact status = %q, should omit long hints", got)
 	}
 }
 

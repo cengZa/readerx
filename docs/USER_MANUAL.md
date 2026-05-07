@@ -574,6 +574,7 @@ readerx read 1
 ```
 
 The status bar shows the current chapter position, whole-book progress, current page, and available shortcut hints.
+On narrow terminals, ReaderX shortens the status bar but keeps chapter, progress, page, help, and quit visible.
 
 Keys:
 

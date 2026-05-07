@@ -259,8 +259,8 @@ func (m ReaderModel) View() string {
 	lines := m.paginator.VisibleLines(m.lineOffset)
 	body := m.renderBody(lines)
 	page, total := m.paginator.PageInfo(m.lineOffset)
-	statusText := fmt.Sprintf("Ch %d/%d | %.0f%% | Page %d/%d | j/k scroll | Space/u page | n/p chapter | ? help | q quit",
-		m.view.Chapter.ChapterNo, m.chapterCount(), overallPercentage(m.view.Chapter.ChapterNo, m.chapterCount(), page, total), page, total)
+	percentage := overallPercentage(m.view.Chapter.ChapterNo, m.chapterCount(), page, total)
+	statusText := readerStatusText(m.view.Chapter.ChapterNo, m.chapterCount(), percentage, page, total, frameWidth)
 	if m.help {
 		body = m.renderBody(m.helpLines())
 		statusText = "ReaderX help | ?/Esc close | q quit"
@@ -323,6 +323,18 @@ func (m ReaderModel) searchStatus() string {
 	result := m.search.results[m.search.selected]
 	return fmt.Sprintf("Result %d/%d | Enter jump | j/k select | %s ch.%d %s",
 		m.search.selected+1, len(m.search.results), result.BookTitle, result.ChapterNo, result.Snippet)
+}
+
+func readerStatusText(chapterNo, chapterCount int, percentage float64, page, total, width int) string {
+	switch {
+	case width < 40:
+		return fmt.Sprintf("Ch%d/%d %.0f%% Pg%d/%d ? q", chapterNo, chapterCount, percentage, page, total)
+	case width < 72:
+		return fmt.Sprintf("Ch %d/%d | %.0f%% | Pg %d/%d | Space/u | n/p | ? | q", chapterNo, chapterCount, percentage, page, total)
+	default:
+		return fmt.Sprintf("Ch %d/%d | %.0f%% | Page %d/%d | j/k scroll | Space/u page | n/p chapter | ? help | q quit",
+			chapterNo, chapterCount, percentage, page, total)
+	}
 }
 
 func (m *ReaderModel) repaginate() {
