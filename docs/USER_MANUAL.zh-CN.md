@@ -258,6 +258,26 @@ Book ID：1
 --max-bytes int       最大下载字节数，默认 104857600
 ```
 
+### 5.3.1 开放书源搜索
+
+搜索合法开放电子书来源。当前支持通过 OPDS 搜索 Project Gutenberg。
+
+```bash
+readerx source list
+readerx source search <keyword>
+readerx source search <keyword> --limit 5
+readerx source search <keyword> --source gutenberg
+```
+
+示例：
+
+```bash
+readerx source search "alice"
+readerx import-url https://www.gutenberg.org/ebooks/11.epub.images --title "Alice's Adventures in Wonderland"
+```
+
+搜索结果会在可用时显示 EPUB 和 TXT URL。选定一个 URL 后，用 `readerx import-url` 导入到本地书库。
+
 ### 5.4 查看书架
 
 列出已导入书籍。
@@ -747,7 +767,7 @@ go build ./...
 - EPUB 支持常见 OPF / spine / XHTML 结构，但不保证覆盖所有 EPUB 边界情况。
 - 搜索是 ngram 辅助的精确关键词搜索，不是完整自然语言分词搜索。
 - Markdown 导出目前覆盖书签和笔记，不支持整本书导出。
-- 当前版本不包含 OPDS 目录搜索、任意网页正文抽取、平台爬虫和 AI 阅读能力。
+- 当前版本不包含任意网页正文抽取、平台爬虫、z-library 类来源和 AI 阅读能力。
 
 ## 10. 安全和数据归属
 

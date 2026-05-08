@@ -54,6 +54,16 @@ readerx import-url https://example.com/book.txt --title "自定义书名"
 
 OPDS 适合作为 Source 插件接入，因为它提供机器可读的书籍元数据和下载链接，比解析网页正文稳定得多。
 
+当前实现已经支持：
+
+```bash
+readerx source list
+readerx source search <keyword>
+readerx source search <keyword> --source gutenberg --limit 5
+```
+
+搜索结果会显示可导入的 EPUB / TXT URL。用户可以继续使用 `readerx import-url <url>` 导入选定结果。
+
 ## 4. 安全与体验约束
 
 - 默认 User-Agent 使用 ReaderX 标识。

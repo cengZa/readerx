@@ -12,6 +12,7 @@ ReaderX is not a general downloader or scraper. It is designed for local files a
 - Import common OPF/spine-based EPUB files
 - Import directories containing TXT and EPUB files
 - Import explicit public TXT/EPUB URLs with size and type checks
+- Search Project Gutenberg through OPDS and import result URLs
 - Warn about likely chapter numbering problems after import
 - Parse chapters automatically
 - Create fallback pseudo chapters for TXT files without headings
@@ -43,6 +44,7 @@ readerx import /path/to/book.txt
 readerx import /path/to/book.epub
 readerx import /path/to/books/
 readerx import-url https://example.com/book.epub
+readerx source search "alice"
 ```
 
 By default ReaderX stores its library at `~/.readerx/reader.db`; you do not need to pass `--db` for normal use.

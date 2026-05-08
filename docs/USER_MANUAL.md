@@ -256,6 +256,26 @@ Notes:
 --max-bytes int       maximum download size in bytes, default 104857600
 ```
 
+### 5.3.1 Open Source Search
+
+Search legal open ebook sources. Current source support is Project Gutenberg through OPDS.
+
+```bash
+readerx source list
+readerx source search <keyword>
+readerx source search <keyword> --limit 5
+readerx source search <keyword> --source gutenberg
+```
+
+Example:
+
+```bash
+readerx source search "alice"
+readerx import-url https://www.gutenberg.org/ebooks/11.epub.images --title "Alice's Adventures in Wonderland"
+```
+
+Search results show importable EPUB and TXT URLs when available. Use `readerx import-url` to import one of those URLs into your local library.
+
 ### 5.4 List Books
 
 List imported books.
@@ -745,7 +765,7 @@ go build ./...
 - EPUB support covers common OPF/spine/XHTML books, not every EPUB edge case.
 - Search is an ngram-assisted exact keyword search, not a full language-aware tokenizer.
 - Markdown export currently covers bookmarks and notes, not full books.
-- OPDS catalog search, arbitrary web page extraction, platform scraping, and AI reading features are intentionally out of scope for the current version.
+- Arbitrary web page extraction, platform scraping, z-library style sources, and AI reading features are intentionally out of scope for the current version.
 
 ## 10. Safety and Data Ownership
 

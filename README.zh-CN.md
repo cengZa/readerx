@@ -12,6 +12,7 @@ ReaderX 不是通用下载器，也不是爬虫工具。它面向你自己拥有
 - 导入常见 OPF/spine 结构的 EPUB 文件
 - 导入包含 TXT 和 EPUB 的目录
 - 导入明确的公开 TXT / EPUB URL，并做文件类型和大小限制
+- 通过 OPDS 搜索 Project Gutenberg，并导入搜索结果中的 URL
 - 导入后提示疑似章节编号问题
 - 自动解析章节
 - 为没有章节标题的 TXT 文件创建伪章节
@@ -43,6 +44,7 @@ readerx import /path/to/book.txt
 readerx import /path/to/book.epub
 readerx import /path/to/books/
 readerx import-url https://example.com/book.epub
+readerx source search "alice"
 ```
 
 默认情况下，ReaderX 会把书库保存在 `~/.readerx/reader.db`；正常使用时不需要传 `--db`。

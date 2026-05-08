@@ -42,7 +42,32 @@ readerx import-url https://example.com/book.txt --title "自定义书名"
 - `--replace` 能重新解析并覆盖旧章节。
 - 导入质量提示不会阻断正常导入。
 
-## 2. List / Info / Remove：书库管理
+## 2. Source：开放书源搜索
+
+### 命令
+
+```bash
+readerx source list
+readerx source search <keyword>
+readerx source search <keyword> --source gutenberg --limit 5
+```
+
+### 功能要求
+
+- 列出当前支持的合法开放书源。
+- 通过 Project Gutenberg OPDS 搜索书籍。
+- 解析 OPDS acquisition links。
+- 搜索结果只展示可导入的 EPUB / TXT URL。
+- 用户选择 URL 后，通过 `readerx import-url <url>` 导入。
+- 不接入 z-library 类来源，不解析任意网页正文。
+
+### 验收标准
+
+- `readerx source list` 能列出 `gutenberg`。
+- `readerx source search <keyword>` 能输出书名、作者、Source ID、EPUB/TXT URL。
+- OPDS 解析只保留有 TXT 或 EPUB 获取链接的条目。
+
+## 3. List / Info / Remove：书库管理
 
 ### 命令
 
@@ -74,7 +99,7 @@ readerx remove <book-id> --yes
 - 删除操作不会误删其他书籍。
 - 删除后关联数据级联清理。
 
-## 3. Read / Continue：阅读
+## 4. Read / Continue：阅读
 
 ### 命令
 
@@ -122,7 +147,7 @@ readerx continue --plain
 - 窄屏状态栏保留关键信息。
 - 退出后进度可恢复。
 
-## 4. Search：搜索
+## 5. Search：搜索
 
 ### 命令
 
@@ -147,7 +172,7 @@ readerx search <keyword> --limit 10
 - 结果包含 book_id、book title、chapter_no、chapter title、snippet。
 - TUI 搜索结果展示章节标题和清理后的单行上下文。
 
-## 5. Bookmark：书签
+## 6. Bookmark：书签
 
 ### 命令
 
@@ -166,7 +191,7 @@ readerx bookmark remove <bookmark-id>
 - TUI 中按 `b` 添加当前位置书签。
 - 支持导出为 Markdown。
 
-## 6. Note：笔记
+## 7. Note：笔记
 
 ### 命令
 
@@ -184,7 +209,7 @@ readerx note remove <note-id>
 - TUI 中按 `m` 添加当前位置笔记。
 - 支持导出为 Markdown。
 
-## 7. Export：导出
+## 8. Export：导出
 
 ### 命令
 
@@ -201,7 +226,7 @@ readerx export notes --book 1 -o notes.md
 - 不传 `-o` 时输出到 stdout。
 - 传 `--book` 时只导出单本书。
 
-## 8. Config：配置
+## 9. Config：配置
 
 ### 命令
 
@@ -221,7 +246,7 @@ reader.theme   default, dark, light
 search.limit   正整数
 ```
 
-## 9. Version：版本
+## 10. Version：版本
 
 ### 命令
 
@@ -234,7 +259,7 @@ readerx version
 - 源码构建默认显示 `dev` 和 `unknown`。
 - Release 包显示 tag、commit 和构建时间。
 
-## 10. 清理与维护
+## 11. 清理与维护
 
 ### 命令
 

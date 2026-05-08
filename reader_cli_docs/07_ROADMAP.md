@@ -46,6 +46,8 @@
 - `readerx import-url --replace`：相同内容重新解析并替换。
 - `readerx import-url --title <title>`：覆盖导入后的书名。
 - `readerx import-url --max-bytes <bytes>`：限制最大下载字节数，默认 100MB。
+- `readerx source list`：列出当前支持的开放书源。
+- `readerx source search <keyword>`：通过 Project Gutenberg OPDS 搜索可导入的 EPUB / TXT URL。
 - 在线导入设计文档：[10_ONLINE_IMPORT_DESIGN.md](10_ONLINE_IMPORT_DESIGN.md)。
 
 范围外：
@@ -56,9 +58,9 @@
 
 下一步：
 
-- 接入合法开放目录源，优先 OPDS。
-- 先支持 Project Gutenberg / Standard Ebooks 这类公开目录的搜索和导入。
-- 设计 `readerx source search`、`readerx source import`、`readerx source list`。
+- 增加 `readerx source import`，让用户可以从搜索结果直接导入，不必手动复制 URL。
+- 评估接入 Standard Ebooks OPDS。
+- 增加搜索结果缓存或历史选择能力。
 
 ## 下一阶段候选：v0.6.0 稳定性与批量导入体验
 
