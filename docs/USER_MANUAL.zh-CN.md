@@ -157,6 +157,7 @@ readerx read 1
 ```bash
 readerx import /path/to/book.txt
 readerx import /path/to/book.epub
+readerx import-url https://example.com/book.epub
 readerx list
 readerx read 1
 ```
@@ -215,6 +216,7 @@ readerx version
 readerx import <file>
 readerx import <directory>
 readerx import <file> --replace
+readerx import-url <url>
 ```
 
 示例：
@@ -224,6 +226,8 @@ readerx import ./book.txt
 readerx import ./book.epub
 readerx import ./books
 readerx import ./book.epub --replace
+readerx import-url https://example.com/book.epub
+readerx import-url https://example.com/book.txt --title "自定义书名"
 ```
 
 输出示例：
@@ -244,6 +248,15 @@ Book ID：1
 - 重复导入相同内容会返回已有 Book ID，不会重复入库。
 - 如果想重新解析已经导入过的文件，使用 `--replace`。它会替换该书已有章节，并重置这本书的阅读进度、书签和笔记。
 - 导入后 ReaderX 可能输出质量提示，用来指出疑似重复章节号、章节号回退或明显跳号等问题。这些提示不会修改已导入内容。
+- `import-url` 只接受明确的公开 HTTP/HTTPS TXT 或 EPUB 直链。它不会解析任意网页正文，不会登录网站，不会绕过访问控制，也不会接入 z-library 类来源。
+
+`import-url` 参数：
+
+```text
+--replace             替换相同内容的已导入书籍
+--title string        覆盖导入后的书名
+--max-bytes int       最大下载字节数，默认 104857600
+```
 
 ### 5.4 查看书架
 
@@ -734,7 +747,7 @@ go build ./...
 - EPUB 支持常见 OPF / spine / XHTML 结构，但不保证覆盖所有 EPUB 边界情况。
 - 搜索是 ngram 辅助的精确关键词搜索，不是完整自然语言分词搜索。
 - Markdown 导出目前覆盖书签和笔记，不支持整本书导出。
-- 当前版本不包含在线源和 AI 阅读能力。
+- 当前版本不包含 OPDS 目录搜索、任意网页正文抽取、平台爬虫和 AI 阅读能力。
 
 ## 10. 安全和数据归属
 
@@ -742,5 +755,5 @@ ReaderX 是本地优先工具：
 
 - 导入内容保存在你的本地 SQLite 数据库。
 - ReaderX 不上传书籍。
-- ReaderX 不包含平台爬虫或下载器逻辑。
-- 请只导入你拥有或有权阅读的文件。
+- ReaderX 不包含平台爬虫、登录绕过或 z-library 类来源逻辑。
+- 请只导入你拥有或有权阅读的文件和公开直链。

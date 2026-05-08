@@ -13,7 +13,8 @@ Reader CLI 是一个本地优先、可扩展数据源的终端阅读器。它不
 - 书签与笔记
 - 全文搜索
 - Source 插件体系
-- 后续可扩展合法在线源、RSS、网页文章、AI 阅读助手
+- 明确公开 TXT / EPUB URL 导入
+- 后续可扩展合法 OPDS 在线源、RSS、AI 阅读助手
 
 ## 文档目录
 
@@ -28,6 +29,7 @@ Reader CLI 是一个本地优先、可扩展数据源的终端阅读器。它不
 | `07_ROADMAP.md` | 版本路线图与迭代计划 |
 | `08_CODEX_TASKS.md` | 给 Codex / AI Coding Agent 的任务拆分提示词 |
 | `09_RISKS.md` | 合规、版权、技术与产品风险说明 |
+| `10_ONLINE_IMPORT_DESIGN.md` | 在线导入边界、实现策略与不支持范围 |
 
 ## 推荐开发原则
 

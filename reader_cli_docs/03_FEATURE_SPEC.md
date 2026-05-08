@@ -11,6 +11,8 @@ readerx import ./book.txt
 readerx import ./book.epub
 readerx import ./books
 readerx import ./book.epub --replace
+readerx import-url https://example.com/book.epub
+readerx import-url https://example.com/book.txt --title "自定义书名"
 ```
 
 ### 功能要求
@@ -21,6 +23,9 @@ readerx import ./book.epub --replace
 - 自动识别章节。
 - TXT 无章节时创建伪章节。
 - EPUB 按 OPF/spine 顺序读取 XHTML 内容。
+- `import-url` 支持明确的公开 HTTP/HTTPS TXT 或 EPUB 直链。
+- `import-url` 默认最大下载 100MB，可通过 `--max-bytes` 调整。
+- `import-url` 支持 `--replace` 和 `--title`。
 - 写入 books、chapters 和搜索索引。
 - 相同内容重复导入时返回已有 Book ID。
 - `--replace` 替换同内容书籍的章节，并清理该书进度、书签、笔记。
@@ -32,6 +37,7 @@ readerx import ./book.epub --replace
 - 能导入 UTF-8 TXT。
 - 能导入常见 OPF/spine EPUB。
 - 能导入目录。
+- 能导入公开 TXT / EPUB 直链。
 - 重复导入不会创建重复书籍。
 - `--replace` 能重新解析并覆盖旧章节。
 - 导入质量提示不会阻断正常导入。

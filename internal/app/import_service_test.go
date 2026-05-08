@@ -1,8 +1,12 @@
 package app
 
 import (
+	"errors"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/heybox/readerx/internal/domain"
@@ -141,6 +145,95 @@ func TestImportServiceImportsDirectoryBooks(t *testing.T) {
 	if results[0].Title != "a" || results[1].Title != "b" {
 		t.Fatalf("results = %#v, want deterministic title order a,b", results)
 	}
+}
+
+func TestImportServiceImportsTXTFromURL(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	withImportURLHTTPClient(t, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+			Body:       io.NopCloser(strings.NewReader("第一章 在线\n内容一\n\n第二章 继续\n内容二")),
+			Request:    r,
+		}, nil
+	}))
+
+	result, err := NewImportService(store).ImportURLWithOptions("https://example.com/book.txt", ImportOptions{TitleOverride: "在线书"})
+	if err != nil {
+		t.Fatalf("ImportURLWithOptions: %v", err)
+	}
+	if result.BookID == 0 || result.Title != "在线书" || result.ChapterCount != 2 {
+		t.Fatalf("result = %#v, want imported online txt with title override and 2 chapters", result)
+	}
+
+	books, err := store.ListBooks()
+	if err != nil {
+		t.Fatalf("ListBooks: %v", err)
+	}
+	if len(books) != 1 || books[0].Title != "在线书" {
+		t.Fatalf("books = %#v, want one imported online book", books)
+	}
+}
+
+func TestImportServiceRejectsUnsupportedURLScheme(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	_, err = NewImportService(store).ImportURLWithOptions("file:///tmp/book.txt", ImportOptions{})
+	if err == nil {
+		t.Fatalf("expected unsupported scheme error")
+	}
+	if !strings.Contains(err.Error(), "unsupported URL scheme") {
+		t.Fatalf("error = %v, want unsupported URL scheme", err)
+	}
+}
+
+func TestImportServiceRejectsTooLargeURLDownload(t *testing.T) {
+	store, err := storage.OpenSQLite(t.TempDir() + "/reader.db")
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	defer store.Close()
+
+	withImportURLHTTPClient(t, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"text/plain"}},
+			Body:       io.NopCloser(strings.NewReader("第一章 在线\n内容超过限制")),
+			Request:    r,
+		}, nil
+	}))
+
+	_, err = NewImportService(store).ImportURLWithOptions("https://example.com/book.txt", ImportOptions{MaxDownloadBytes: 8})
+	if err == nil {
+		t.Fatalf("expected download too large error")
+	}
+	if !errors.Is(err, ErrDownloadTooLarge) {
+		t.Fatalf("error = %v, want ErrDownloadTooLarge", err)
+	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (fn roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) {
+	return fn(r)
+}
+
+func withImportURLHTTPClient(t *testing.T, transport http.RoundTripper) {
+	t.Helper()
+	previousClient := importURLHTTPClient
+	importURLHTTPClient = &http.Client{Transport: transport}
+	t.Cleanup(func() {
+		importURLHTTPClient = previousClient
+	})
 }
 
 func TestImportServiceDirectoryRejectsNoSupportedFiles(t *testing.T) {

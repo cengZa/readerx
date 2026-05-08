@@ -2,7 +2,7 @@
 
 本文档记录 ReaderX 当前进度和下一阶段路线。命令名前缀统一为 `readerx`。
 
-## 当前版本：v0.4.0
+## 最新发布：v0.4.0
 
 目标：成为可安装、可发布、可日常使用的本地 TXT / EPUB 终端阅读器。
 
@@ -34,9 +34,33 @@
 - 目录导入是顺序导入，失败时会中断当前批次。
 - TUI 每次仍以章节为读取单位，超大章节的启动和排版还有优化空间。
 - 尚未提供整本书导出、数据备份/恢复、数据库迁移命令。
-- Online source 和 AI 阅读助手暂不进入下一阶段。
+- OPDS 目录搜索、任意网页正文抽取、平台爬虫和 AI 阅读助手暂不进入当前发布版。
 
-## 下一阶段：v0.5.0 稳定性与批量导入体验
+## 当前主干：v0.5.0 在线导入基础
+
+目标：减少“手动下载到本地再导入”的重复步骤，但不把 ReaderX 做成通用下载器或爬虫。
+
+已完成：
+
+- `readerx import-url <url>`：导入明确的公开 HTTP/HTTPS TXT / EPUB 直链。
+- `readerx import-url --replace`：相同内容重新解析并替换。
+- `readerx import-url --title <title>`：覆盖导入后的书名。
+- `readerx import-url --max-bytes <bytes>`：限制最大下载字节数，默认 100MB。
+- 在线导入设计文档：[10_ONLINE_IMPORT_DESIGN.md](10_ONLINE_IMPORT_DESIGN.md)。
+
+范围外：
+
+- 不接入 z-library 等高版权风险来源。
+- 不做登录、Cookie、验证码、反爬、镜像发现、付费墙绕过。
+- 不解析任意网页正文作为书籍。
+
+下一步：
+
+- 接入合法开放目录源，优先 OPDS。
+- 先支持 Project Gutenberg / Standard Ebooks 这类公开目录的搜索和导入。
+- 设计 `readerx source search`、`readerx source import`、`readerx source list`。
+
+## 下一阶段候选：v0.6.0 稳定性与批量导入体验
 
 目标：降低大书和多书导入时的不确定感，提高错误恢复能力。
 
@@ -52,7 +76,7 @@
 范围外：
 
 - 不做 EPUB 自动修复。
-- 不引入 AI 或在线来源。
+- 不引入 AI。
 - 不重写搜索引擎。
 
 验收：
@@ -63,7 +87,7 @@
 
 ## 后续阶段候选
 
-### v0.6.0 阅读体验
+### v0.7.0 阅读体验
 
 - 搜索结果面板从单行状态栏升级为可浏览列表。
 - TUI 内支持章节目录面板。
@@ -71,14 +95,14 @@
 - 当前章节内搜索高亮。
 - 可配置自动保存频率。
 
-### v0.7.0 数据管理
+### v0.8.0 数据管理
 
 - `readerx backup` / `readerx restore`。
 - 数据库 schema version 和迁移机制。
 - `readerx doctor` 检查数据库、索引和书籍内容状态。
 - `readerx reindex` 重建搜索索引。
 
-### v0.8.0 发布与安装体验
+### v0.9.0 发布与安装体验
 
 - Homebrew Tap。
 - Release 安装脚本。
@@ -88,5 +112,5 @@
 ### 暂不规划
 
 - EPUB 自动修复。
-- 在线下载/爬虫。
+- z-library 类来源、登录绕过、任意网页抓书。
 - AI 摘要、问答、人物关系。

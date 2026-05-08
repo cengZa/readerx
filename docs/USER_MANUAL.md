@@ -155,6 +155,7 @@ Use your own book:
 ```bash
 readerx import /path/to/book.txt
 readerx import /path/to/book.epub
+readerx import-url https://example.com/book.epub
 readerx list
 readerx read 1
 ```
@@ -213,6 +214,7 @@ Import a local TXT or EPUB file.
 readerx import <file>
 readerx import <directory>
 readerx import <file> --replace
+readerx import-url <url>
 ```
 
 Examples:
@@ -222,6 +224,8 @@ readerx import ./book.txt
 readerx import ./book.epub
 readerx import ./books
 readerx import ./book.epub --replace
+readerx import-url https://example.com/book.epub
+readerx import-url https://example.com/book.txt --title "Custom Title"
 ```
 
 Output example:
@@ -242,6 +246,15 @@ Notes:
 - Duplicate imports of the same content return the existing Book ID.
 - Use `--replace` to reparse an already imported file and replace its stored chapters. This resets progress, bookmarks, and notes for that book.
 - After import, ReaderX may print quality warnings for likely chapter numbering problems, such as duplicate chapter numbers, backwards numbering, or obvious skipped chapter numbers. These warnings do not modify imported content.
+- `import-url` accepts only explicit public HTTP/HTTPS TXT or EPUB URLs. It does not parse arbitrary web pages, log in to websites, bypass access controls, or integrate with z-library style sources.
+
+`import-url` flags:
+
+```text
+--replace             replace an existing imported book with the same content
+--title string        override the imported book title
+--max-bytes int       maximum download size in bytes, default 104857600
+```
 
 ### 5.4 List Books
 
@@ -732,7 +745,7 @@ go build ./...
 - EPUB support covers common OPF/spine/XHTML books, not every EPUB edge case.
 - Search is an ngram-assisted exact keyword search, not a full language-aware tokenizer.
 - Markdown export currently covers bookmarks and notes, not full books.
-- Online sources and AI reading features are intentionally out of scope for the current version.
+- OPDS catalog search, arbitrary web page extraction, platform scraping, and AI reading features are intentionally out of scope for the current version.
 
 ## 10. Safety and Data Ownership
 
@@ -740,5 +753,5 @@ ReaderX is local-first:
 
 - Imported content is stored in your local SQLite database.
 - ReaderX does not upload books.
-- ReaderX does not include platform scraping or downloader logic.
-- Use it with files you own or are allowed to read.
+- ReaderX does not include platform scraping, login bypass, or z-library style source logic.
+- Use it with files and public direct URLs you own or are allowed to read.

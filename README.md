@@ -4,13 +4,14 @@ Chinese version: [README.zh-CN.md](README.zh-CN.md)
 
 ReaderX is a local-first terminal reader for long-form text. It imports TXT and EPUB files into a local SQLite library, provides a terminal reading UI, and keeps reading progress, search data, bookmarks, and notes on your machine.
 
-ReaderX is not a downloader or scraper. It is designed for local files you own or are allowed to read.
+ReaderX is not a general downloader or scraper. It is designed for local files and explicit public TXT/EPUB URLs you own or are allowed to read.
 
 ## What It Can Do
 
 - Import UTF-8 TXT files
 - Import common OPF/spine-based EPUB files
 - Import directories containing TXT and EPUB files
+- Import explicit public TXT/EPUB URLs with size and type checks
 - Warn about likely chapter numbering problems after import
 - Parse chapters automatically
 - Create fallback pseudo chapters for TXT files without headings
@@ -41,6 +42,7 @@ Use your own files:
 readerx import /path/to/book.txt
 readerx import /path/to/book.epub
 readerx import /path/to/books/
+readerx import-url https://example.com/book.epub
 ```
 
 By default ReaderX stores its library at `~/.readerx/reader.db`; you do not need to pass `--db` for normal use.
@@ -170,7 +172,7 @@ The CLI layer parses arguments and calls application services. Storage and parsi
 - Search uses a lightweight ngram index, not a full tokenizer-based search engine.
 - Markdown export is available for bookmarks and notes, but full book export is not implemented yet.
 - Directory import is recursive but currently imports supported files sequentially without a progress bar.
-- Online sources and AI reading features are intentionally out of scope for the current version.
+- General web scraping, z-library style sources, login bypass, and AI reading features are intentionally out of scope for the current version.
 
 ## Repository
 
