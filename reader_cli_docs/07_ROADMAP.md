@@ -23,7 +23,7 @@
 - 导出：书签和笔记导出 Markdown。
 - 配置：阅读宽度、主题、默认搜索数量。
 - 版本信息：`readerx version`，Release 包注入 tag、commit、构建时间。
-- 发布：GitHub Actions 构建 macOS / Linux amd64 / arm64 发布包。
+- 发布：GitHub Actions 构建 macOS / Linux / Windows amd64 / arm64 发布包。
 - 文档：英文 README、中文 README、英文用户手册、中文用户手册。
 
 当前限制：
@@ -108,7 +108,6 @@
 
 - Homebrew Tap。
 - Release 安装脚本。
-- README 增加按平台下载说明。
 - CI 增加 release archive smoke test。
 
 ### 暂不规划

@@ -83,7 +83,7 @@ Download release archives:
 
 <https://github.com/cengZa/readerx/releases>
 
-After downloading:
+For macOS or Linux, download the matching `.tar.gz`, then extract:
 
 ```bash
 tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
@@ -100,6 +100,14 @@ xattr -c ~/.local/bin/readerx.tmp 2>/dev/null || true
 chmod +x ~/.local/bin/readerx.tmp
 mv -f ~/.local/bin/readerx.tmp ~/.local/bin/readerx
 readerx --help
+```
+
+For Windows, download the matching `.zip`, extract it, and run from PowerShell or Windows Terminal:
+
+```powershell
+Expand-Archive .\readerx_vX.Y.Z_windows_amd64.zip
+cd .\readerx_vX.Y.Z_windows_amd64
+.\readerx.exe --help
 ```
 
 ## User Manual

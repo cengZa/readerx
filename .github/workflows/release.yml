@@ -34,6 +34,8 @@ jobs:
             "darwin arm64"
             "linux amd64"
             "linux arm64"
+            "windows amd64"
+            "windows arm64"
           )
 
           for target in "${targets[@]}"; do
@@ -42,19 +44,28 @@ jobs:
             mkdir -p "dist/${name}"
             build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             ldflags="-s -w -X github.com/heybox/readerx/internal/version.Version=${GITHUB_REF_NAME} -X github.com/heybox/readerx/internal/version.Commit=${GITHUB_SHA} -X github.com/heybox/readerx/internal/version.Date=${build_date}"
-            GOOS="${goos}" GOARCH="${goarch}" CGO_ENABLED=0 go build -trimpath -ldflags="${ldflags}" -o "dist/${name}/readerx" .
+            binary="readerx"
+            if [[ "${goos}" == "windows" ]]; then
+              binary="readerx.exe"
+            fi
+            GOOS="${goos}" GOARCH="${goarch}" CGO_ENABLED=0 go build -trimpath -ldflags="${ldflags}" -o "dist/${name}/${binary}" .
             cp README.md LICENSE "dist/${name}/" 2>/dev/null || cp README.md "dist/${name}/"
-            tar -C dist -czf "dist/${name}.tar.gz" "${name}"
+            if [[ "${goos}" == "windows" ]]; then
+              (cd dist && zip -qr "${name}.zip" "${name}")
+            else
+              tar -C dist -czf "dist/${name}.tar.gz" "${name}"
+            fi
             rm -rf "dist/${name}"
           done
 
           cd dist
-          shasum -a 256 *.tar.gz > checksums.txt
+          shasum -a 256 *.tar.gz *.zip > checksums.txt
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.tar.gz
+            dist/*.zip
             dist/checksums.txt
           generate_release_notes: true

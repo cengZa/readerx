@@ -83,7 +83,7 @@ make install INSTALL_DIR=/usr/local/bin
 
 <https://github.com/cengZa/readerx/releases>
 
-下载后解压：
+macOS 或 Linux 下载对应 `.tar.gz` 后解压：
 
 ```bash
 tar -xzf readerx_vX.Y.Z_darwin_arm64.tar.gz
@@ -100,6 +100,14 @@ xattr -c ~/.local/bin/readerx.tmp 2>/dev/null || true
 chmod +x ~/.local/bin/readerx.tmp
 mv -f ~/.local/bin/readerx.tmp ~/.local/bin/readerx
 readerx --help
+```
+
+Windows 下载对应 `.zip` 后，在 PowerShell 或 Windows Terminal 中解压并运行：
+
+```powershell
+Expand-Archive .\readerx_vX.Y.Z_windows_amd64.zip
+cd .\readerx_vX.Y.Z_windows_amd64
+.\readerx.exe --help
 ```
 
 ## 用户手册
