@@ -1,40 +1,39 @@
-# Reader CLI 文档包
+# ReaderX 维护者文档
 
-## 项目定位
+本目录面向 ReaderX 的开发者和维护者。用户安装与命令用法请优先阅读仓库根目录的 `README.md`、`README.zh-CN.md` 和 `docs/USER_MANUAL*.md`。
 
-Reader CLI 是一个本地优先、可扩展数据源的终端阅读器。它不是“某个平台小说下载器”，而是一个面向终端用户、开发者和重度文本阅读用户的 Terminal Reading Platform。
+## 当前基线
 
-核心能力：
+- 最新发布：`v0.5.1`
+- 主要能力：本地 TXT / EPUB 导入、公开直链导入、Project Gutenberg OPDS 搜索、SQLite 书库、TUI 阅读、搜索、书签、笔记和配置
+- 支持平台：macOS、Linux、Windows；发布包覆盖 amd64 / arm64
+- 代码是行为事实来源；文档与代码冲突时以代码为准，并修正文档
 
-- 本地 TXT / EPUB / Markdown 导入
-- 自动章节解析
-- 终端 TUI 阅读
-- 阅读进度保存
-- 书签与笔记
-- 全文搜索
-- Source 插件体系
-- 明确公开 TXT / EPUB URL 导入
-- 后续可扩展合法 OPDS 在线源、RSS、AI 阅读助手
+## 文档职责
 
-## 文档目录
-
-| 文件 | 作用 |
+| 文件 | 唯一职责 |
 |---|---|
-| `01_PRD.md` | 产品需求文档，解释做什么、为什么做、给谁用 |
-| `02_ARCHITECTURE.md` | 系统架构设计，解释整体分层和模块职责 |
-| `03_FEATURE_SPEC.md` | 功能规格说明，拆解具体功能与验收标准 |
-| `04_DATA_MODEL.md` | 数据模型与 SQLite 表设计 |
-| `05_SOURCE_PLUGIN.md` | Source 插件体系设计 |
-| `06_TUI_UX.md` | CLI/TUI 交互设计与快捷键规范 |
-| `07_ROADMAP.md` | 版本路线图与迭代计划 |
-| `08_CODEX_TASKS.md` | 给 Codex / AI Coding Agent 的任务拆分提示词 |
-| `09_RISKS.md` | 合规、版权、技术与产品风险说明 |
-| `10_ONLINE_IMPORT_DESIGN.md` | 在线导入边界、实现策略与不支持范围 |
+| `01_PRD.md` | 产品定位、目标用户、核心价值和非目标 |
+| `02_ARCHITECTURE.md` | 当前代码架构、业务链路、包职责和代码导读 |
+| `03_FEATURE_SPEC.md` | 当前可用能力及验收口径 |
+| `04_DATA_MODEL.md` | 领域模型、应用 DTO、SQLite 表和数据约束 |
+| `05_SOURCE_PLUGIN.md` | 当前内容来源与导入链路，以及后续 Source 扩展边界 |
+| `06_TUI_UX.md` | 当前已实现的 TUI 状态、布局和快捷键 |
+| `07_ROADMAP.md` | 已发布能力、当前限制和下一阶段路线 |
+| `09_RISKS.md` | 合规、数据、兼容性和架构风险 |
 
-## 推荐开发原则
+## 去重原则
 
-1. 先做 Reader，不做 Downloader。
-2. 先支持本地文件，再考虑在线源。
-3. 核心逻辑与 UI 解耦。
-4. Source 抽象先设计，具体 Source 后接入。
-5. 每个阶段都要有可运行、可验收的版本。
+- README 只做项目概览和快速开始，不复制完整命令手册。
+- 用户手册负责“怎么用”，功能规格负责“系统能做什么”。
+- 架构文档负责“代码怎么协作”，数据模型文档负责“数据是什么、存在哪里”。
+- Source 文档同时承载在线导入边界，不再单独维护一份重复设计。
+- 已完成的一次性开发任务不长期保留为任务提示词；后续工作统一进入路线图。
+
+## 推荐阅读顺序
+
+1. `01_PRD.md`
+2. `02_ARCHITECTURE.md`
+3. `04_DATA_MODEL.md`
+4. `03_FEATURE_SPEC.md`
+5. 按需阅读 Source、TUI、路线图和风险文档

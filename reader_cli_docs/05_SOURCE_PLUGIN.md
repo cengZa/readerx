@@ -1,229 +1,116 @@
-# 05. Source 插件体系设计
+# ReaderX 内容来源与导入设计
 
-## 1. 为什么需要 Source 抽象
+本文档说明当前已经实现的 Source / Import 机制，并定义未来扩展边界。当前代码没有通用插件接口或 Source Registry，文件名沿用历史名称以避免文档链接失效。
 
-如果项目只支持 TXT，那么很容易写成：
+## 1. 当前有三类输入
+
+| 输入 | 命令 | 实现 |
+|---|---|---|
+| 本地文件或目录 | `readerx import <path>` | `ImportService` + `internal/source` + parser |
+| 公开 TXT / EPUB 直链 | `readerx import-url <url>` | 下载到临时文件后复用本地导入 |
+| 开放目录搜索 | `readerx source search <keyword>` | `SourceService` 查询 Project Gutenberg OPDS |
+
+最终只有 TXT / EPUB 文件会进入统一导入链路并持久化为 `domain.Book` 和 `[]domain.Chapter`。
+
+## 2. 本地来源
 
 ```text
-Reader → TXT Parser → SQLite
+source.ImportLocalFile(path)
+  -> .txt  -> LocalTxtSource.ImportFile -> parser.ParseTXTFile
+  -> .epub -> LocalEpubSource.ImportFile -> parser.ParseEPUBFile
+  -> domain.Book + []domain.Chapter
 ```
 
-但未来如果要支持：
+`internal/source` 当前是格式分派层，不是动态插件系统。它隔离了应用层与具体 parser，使 `ImportService` 不需要判断 TXT / EPUB 的解析细节。
 
-- EPUB
-- Markdown
-- RSS
-- Web Article
-- 合法在线 API
-- 自定义插件
+### TXT
 
-就必须把“内容来源”抽象出来。
+- 书名默认取文件名。
+- 文件字节 SHA-256 作为书籍内容哈希。
+- 识别中文“第 N 章/节/回/卷/部/篇”、`卷 N` 和 `Chapter N`。
+- 没有章节标题时每 4000 个 rune 创建伪章节。
+- 章节正文清理连续空行，章节哈希按清理后正文计算。
 
-目标：
+### EPUB
 
-> Reader Core 不关心内容从哪里来，只消费统一的 Book、Chapter、Content。
+- 读取 `META-INF/container.xml` 定位 OPF。
+- 从 OPF 提取标题、作者、manifest 和 spine。
+- 按 spine 顺序读取 XHTML，抽取第一个 heading 和正文。
+- 跳过没有可读正文的 spine item。
+- 整个 EPUB 文件字节 SHA-256 作为书籍内容哈希。
 
-## 2. Source 的核心职责
+## 3. URL 导入
 
-Source 负责：
+```text
+ImportURLWithOptions(url)
+  -> 只允许 http / https
+  -> 30 秒超时
+  -> 根据 URL 后缀或 Content-Type 判断 TXT / EPUB
+  -> 默认最大 100MB
+  -> 临时文件
+  -> ImportFileWithOptions
+  -> 本地解析、内容去重、入库、索引
+  -> 清理临时目录
+```
 
-- 搜索书籍
-- 获取书籍元信息
-- 获取章节目录
-- 获取章节正文
-- 判断是否支持 Lazy Loading
-- 返回统一数据结构
+复用目标是 `app.ImportService.ImportFileWithOptions`。它读取 `domain.Book.ContentHash`，查询 `books.content_hash` 唯一索引，随后写入 `books`、`chapters` 和 `chapter_search_terms`；这些字段再被书库列表、阅读、搜索和标记功能消费。
 
-## 3. 概念接口
+当前限制：URL 本身没有保存在 `books`；`file_path` 来自临时文件路径，因此在线来源不可直接重放。
+
+## 4. OPDS 开放目录搜索
+
+```text
+SourceService.Search
+  -> https://www.gutenberg.org/ebooks/search.opds/
+  -> Atom/XML entry
+  -> acquisition link
+  -> SourceSearchResult{Title, Author, EPUBURL, TextURL}
+  -> CLI 输出
+```
+
+当前只注册了字符串常量 `gutenberg`。搜索结果是内存 DTO，不写 `sources`、`books` 或缓存；用户选择结果后需要执行：
+
+```bash
+readerx import-url <EPUB-or-TXT-url>
+```
+
+`sources` 表目前只是 schema 预留，没有对应 Store 方法。不要假设 `readerx source list` 来自数据库配置。
+
+## 5. 为什么暂时没有通用插件接口
+
+当前只有一个在线搜索源，直接实现比提前定义复杂接口更容易验证真实需求。等出现第二个来源，并且搜索、鉴权、分页、格式选择确实存在共同契约时，再抽象 Registry 更合适。
+
+未来可能的最小接口应围绕当前真实能力，而不是一次覆盖所有设想：
 
 ```go
-type Source interface {
+type CatalogSource interface {
     Name() string
-    Type() string
-
-    SearchBooks(ctx context.Context, keyword string) ([]BookMeta, error)
-    GetBook(ctx context.Context, sourceBookID string) (BookMeta, error)
-    ListChapters(ctx context.Context, sourceBookID string) ([]ChapterMeta, error)
-    GetChapterContent(ctx context.Context, sourceChapterID string) (ChapterContent, error)
-
-    Capabilities() SourceCapabilities
+    Search(ctx context.Context, query string, limit int) ([]SourceSearchResult, error)
 }
 ```
 
-## 4. SourceCapabilities
+文件导入与目录搜索应继续保持两个概念：Catalog Source 负责发现，ImportService 负责下载、解析和入库。
 
-```go
-type SourceCapabilities struct {
-    Search      bool
-    LazyLoad    bool
-    Offline     bool
-    Export      bool
-    AuthRequired bool
-}
-```
+## 6. 下一步演进建议
 
-示例：
+1. 增加 `readerx source import`，用稳定结果 ID 或显式格式选择直接调用 ImportService。
+2. 保存真实远程来源 URL，而不是临时文件路径。
+3. 接入第二个合法 OPDS 来源后再引入 Registry。
+4. 为请求超时、User-Agent、最大下载大小和重试提供结构化配置。
+5. 明确是否启用 `sources` 表；若短期不用，后续 migration 可考虑移除预留表。
 
-| Source | Search | LazyLoad | Offline |
-|---|---:|---:|---:|
-| Local TXT | false | false | true |
-| Local EPUB | false | false | true |
-| RSS | true | true | false |
-| Web Article | true | true | false |
-| Online API | true | true | false |
+## 7. 合规边界
 
-## 5. 数据结构
+支持：
 
-### BookMeta
+- 用户自己的本地文件
+- 用户明确提供且有权访问的公开 TXT / EPUB 直链
+- Project Gutenberg 等合法开放目录
 
-```go
-type BookMeta struct {
-    SourceType   string
-    SourceBookID string
-    Title        string
-    Author       string
-    Description  string
-    CoverURL     string
-}
-```
+不支持：
 
-### ChapterMeta
-
-```go
-type ChapterMeta struct {
-    SourceChapterID string
-    ChapterNo       int
-    Title           string
-    WordCount       int
-}
-```
-
-### ChapterContent
-
-```go
-type ChapterContent struct {
-    SourceChapterID string
-    Title           string
-    Content         string
-    ContentHash     string
-}
-```
-
-## 6. Lazy Loading 机制
-
-### 全量导入模式
-
-适合：
-
-- TXT
-- EPUB
-- Markdown
-
-流程：
-
-```text
-Parse File
-  ↓
-Book + All Chapters
-  ↓
-SQLite
-```
-
-### 懒加载模式
-
-适合：
-
-- 在线源
-- RSS
-- 网页文章集合
-
-流程：
-
-```text
-Import Book Meta
-  ↓
-Import Chapter Catalog
-  ↓
-Chapter content_status = empty
-  ↓
-Read Chapter
-  ↓
-Fetch Content
-  ↓
-Cache Content
-```
-
-## 7. Source Registry
-
-需要一个 Source 注册器：
-
-```go
-type Registry struct {
-    sources map[string]Source
-}
-
-func (r *Registry) Register(source Source)
-func (r *Registry) Get(sourceType string) (Source, bool)
-func (r *Registry) List() []Source
-```
-
-## 8. Source 接入流程
-
-新增一个 Source 时，只需要：
-
-1. 实现 Source 接口
-2. 注册到 Registry
-3. 配置 source_type
-4. 测试 import/read/search 流程
-
-Reader Core 不需要修改。
-
-## 9. 第一阶段 Source
-
-### LocalTxtSource
-
-职责：
-
-- 读取 TXT 文件
-- 解析章节
-- 返回 BookMeta + ChapterContent
-
-### LocalEpubSource
-
-第二阶段实现。
-
-### MarkdownSource
-
-第三阶段实现。
-
-## 10. 关于番茄小说等在线平台
-
-项目本身不应内置任何未经授权的逆向接口。
-
-如果未来存在合法 API 或用户授权方式，可以以 Source 插件形式接入。
-
-原则：
-
-- 不绕过登录
-- 不破解签名
-- 不批量分发内容
-- 不缓存未授权内容
-- 不作为下载器宣传
-
-## 11. Source 配置
-
-```yaml
-sources:
-  local:
-    enabled: true
-
-  rss:
-    enabled: true
-    feeds:
-      - https://example.com/feed.xml
-
-  web:
-    enabled: false
-```
-
-配置可以落入 `sources.config_json`。
+- z-library 等高版权风险来源
+- 登录、Cookie、验证码、反爬和镜像发现
+- 绕过付费墙、签名、风控或访问控制
+- 任意网页正文抽取和批量抓取
+- 未授权内容分发
